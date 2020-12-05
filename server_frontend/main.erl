@@ -65,7 +65,7 @@ serve_client({Manager, AuthManager, Sock}) ->
 
 serve_client_request({AuthManager, Sock}, Request) ->
     try
-        case maps:get("Request_Type", Request#request.map, unknown) of
+        case maps:get("RequestType", Request#request.map, unknown) of
             "Registration" ->
                 serve_client_request_registration({AuthManager, Sock}, Request);
             "Authentication" ->
@@ -105,11 +105,11 @@ make_response(Code) ->
     list_to_binary(io_lib:format( "{\"version\": \"1.0.0\", \"code\": \"~p\"}", [Code])).
 
 make_response(ReqType, Code) ->
-    S = io_lib:format( "{\"version\": \"1.0.0\", \"Request_Type\": ~p, \"code\": \"~p\"}"
+    S = io_lib:format( "{\"version\": \"1.0.0\", \"RequestType\": ~p, \"code\": \"~p\"}"
                      , [ReqType, Code]),
     list_to_binary(S).
 
 make_response(ReqType, Code, Body) ->
-    S = io_lib:format( "{\"version\": \"1.0.0\", \"Request_Type\": ~p, \"code\": \"~p\", \"body\": ~p}"
+    S = io_lib:format( "{\"version\": \"1.0.0\", \"RequestType\": ~p, \"code\": \"~p\", \"body\": ~p}"
                      , [ReqType, Code, Body]),
     list_to_binary(S).
