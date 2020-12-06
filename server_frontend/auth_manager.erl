@@ -29,7 +29,7 @@ add_account(State, Account) ->
 
 % add_log(State, String) -> State
 add_log(State, Message) ->
-    io:fwrite("Log ~w:" ++ Message ++ "~n", [self()]),
+    % io:fwrite("Log ~w:" ++ Message ++ "~n", [self()]),
     State#state{logs = [Message] ++ State#state.logs }.
 
 auth_manager(State) ->
