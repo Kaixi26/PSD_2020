@@ -6,10 +6,9 @@ import java.net.Socket;
 
 import static java.lang.Thread.sleep;
 
-public class main {
-    public static void main(String[] args) throws Exception {
+public class teste {
+    public static void main(String[] args)  {
         Communication com = new Communication();
-        com.authenticate("Michael","Scofield");
-        com.register("Michael","Scofield","Fox River");
+        com.probe(2,3);
     }
 }
