@@ -39,4 +39,12 @@ public class Communication {
     public void register(String name,String pass,String dom){
         new Registration().sendRegistrationReq(name,pass,dom,socket);
     }
+
+    public void position(int lat,int lon){
+        new Location().sendNotifyLocationReq(lat,lon,socket);
+    }
+
+    public void probe(int lat,int lon){
+        new Location().sendProbeLocationReq(lat,lon,socket);
+    }
 }
