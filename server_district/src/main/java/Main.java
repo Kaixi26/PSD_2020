@@ -1,4 +1,4 @@
-import Models.CommunicationProtocols.Responses.ContactWithInfected;
+import Models.CommunicationProtocols.Responses.ProbeLocationResponse;
 import Models.Location;
 import Business.ClientsLocationManager;
 import com.google.gson.Gson;
@@ -6,9 +6,7 @@ import com.google.gson.Gson;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
 import java.util.Properties;
-import java.util.Set;
 
 public class Main {
     private void loadConfigFile() {
@@ -23,26 +21,11 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        /*if (args.length < 1) {
-            System.out.println("Insufficient number of Arguments!");
-            System.exit(1);
-        }*/
         Gson gson = new Gson();
-        Set<String> s = new HashSet<>();
-        s.add("1");
-        s.add("2");
-        s.add("3");
-        ContactWithInfected n = new ContactWithInfected(s);
-        String json = gson.toJson(n);
-        System.out.println(json);
-        /*String user = "";
-        ClientsLocationManager clientsLocationManager = new ClientsLocationManager();
-        for(int i = 0; i<10;i++){
-            user = String.valueOf(i);
-            new Cenas( user, clientsLocationManager).start();
-        }
-        Thread.sleep(1000);
-        System.out.println(clientsLocationManager.toString());*/
+        ProbeLocationResponse l =  new ProbeLocationResponse(200,12);
+        System.out.println(gson.toJson(l));
+        var l1 = gson.fromJson(gson.toJson(l), ProbeLocationResponse.class);
+        System.out.println(l1.getStatusCode());
     }
 
 

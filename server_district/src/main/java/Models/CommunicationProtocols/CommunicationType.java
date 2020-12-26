@@ -1,3 +1,9 @@
 package Models.CommunicationProtocols;
 
-public interface CommunicationType { }
+public enum CommunicationType {
+    AnnounceDistrictServer,
+    ContactWithInfected,
+    NotifyLocation,
+    NotifyInfection,
+    ProbeLocation
+}

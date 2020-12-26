@@ -1,5 +1,7 @@
 package Business;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -10,7 +12,7 @@ public class ClientsContacts {
         this.contacts = new HashSet<>();
     }
 
-    public synchronized void addContact(String contact) {
+    public synchronized void addContact(@NotNull String contact) {
         this.contacts.add(contact);
     }
 

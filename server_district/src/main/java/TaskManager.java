@@ -23,11 +23,9 @@ public class TaskManager extends Thread {
         String jsonRequest, requestType;
         JsonObject jobj;
 
-        /**
-          Anounce Server
-         */
 
-        /*try {
+
+        try {
             while ((jsonRequest = in.readLine()) != null) {
 
                 jobj = new Gson().fromJson(jsonRequest, JsonObject.class);
@@ -35,11 +33,9 @@ public class TaskManager extends Thread {
 
                 switch (requestType){
                     case "NotifyLocation":
-                        NotifyLocation notifyLocation = gson.fromJson(jsonRequest, NotifyLocation.class);
-                        this.manager.moveTo(notifyLocation.getName(), notifyLocation.getLocation());
+
                         break;
                     case "ProbeLocation":
-                        ProbeLocation probeLocation = gson.fromJson(jsonRequest, ProbeLocation.class);
 
                         break;
                     default:
@@ -48,6 +44,6 @@ public class TaskManager extends Thread {
             }
         } catch (IOException e) {
             e.printStackTrace();
-        }*/
+        }
     }
 }

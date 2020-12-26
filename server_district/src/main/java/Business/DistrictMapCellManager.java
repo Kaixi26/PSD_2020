@@ -1,5 +1,7 @@
 package Business;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -10,21 +12,15 @@ public class DistrictMapCellManager {
         this.presentClients = new HashSet<>();
     }
 
-    public synchronized Set<String> addClient(String username) {
+    public synchronized Set<String> addClient(@NotNull String username) {
         Set<String> clientsInLocation = new HashSet<>();
         this.presentClients.add(username);
         this.presentClients.forEach(client -> clientsInLocation.add(client));
         return clientsInLocation;
     }
 
-    public synchronized void removeClient(String username) {
+    public synchronized void removeClient(@NotNull String username) {
         this.presentClients.remove(username);
-    }
-
-    public synchronized Set<String> getClientsPresent() {
-        Set<String> result = new HashSet<>();
-        this.presentClients.forEach(username -> result.add(username));
-        return result;
     }
 
     public synchronized int getNumberOfClientsPresent(){
