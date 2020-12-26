@@ -10,10 +10,10 @@ public class NotifyLocationRequest extends RequestProtocol {
     @SerializedName("location")
     private final Location location;
 
-    public NotifyLocationRequest(CommunicationType requestType, String username, Location location) {
-        super(requestType);
+    public NotifyLocationRequest(String username, int latitude, int longitude) {
+        super(CommunicationType.NotifyLocation);
         this.Username = username;
-        this.location = location;
+        this.location = new Location(latitude, longitude);
     }
 
     public String getUsername() {

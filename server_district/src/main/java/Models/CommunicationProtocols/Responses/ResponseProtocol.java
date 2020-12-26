@@ -5,7 +5,7 @@ import Models.CommunicationProtocols.CommunitationProtocol;
 import com.google.gson.annotations.SerializedName;
 
 public abstract class ResponseProtocol extends CommunitationProtocol {
-    @SerializedName("response_type")
+    @SerializedName("ResponseType")
     private final CommunicationType ResponseType;
     @SerializedName("code")
     private final int statusCode;
