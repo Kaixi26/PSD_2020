@@ -2,7 +2,7 @@
 -export([start_server/0, start_server/1, decode_request/1, intercalate/2]).
 -import(mochijson, [decode/1, encode/1]).
 -record(request, {map = #{}}).
--record(cserver_state, {distManager, authManager, sock, logged = false}).
+-record(state, {distManager, authManager, sock, logged = false}).
 
 % decode_request(#request, Key-Value Pairs) -> #request
 request_from_decoded(Acc, []) ->
@@ -38,7 +38,7 @@ start_server(Port) ->
 main_loop({DistManager, AuthManager, SSock}) ->
     {ok, Sock} = gen_tcp:accept(SSock),
     io:format("accepted connection.~n"),
-    Pid = spawn(fun() -> serve_connection(#cserver_state
+    Pid = spawn(fun() -> serve_connection(#state
                                       { distManager = DistManager
                                       , authManager = AuthManager
                                       , sock = Sock}) end),
@@ -83,15 +83,15 @@ serve_connection_request(State, Request) ->
                 serve_client_request_registration(State, Request);
             "Authentication" ->
                 serve_client_request_authentication(State, Request);
-%            "NotifyInfection" ->
-%                ok;
+            "NotifyInfection" ->
+                serve_client_request_notifyInfection(State, Request);
             "NotifyLocation" ->
                 serve_client_request_notifyLocation(State, Request);
             "ProbeLocation" ->
                 serve_client_request_probeLocation(State, Request);
             "Logout" ->
-                gen_tcp:send(State#cserver_state.sock, make_response("Logout", 200)),
-                {updateState, State#cserver_state{logged = false}};
+                gen_tcp:send(State#state.sock, make_response("Logout", 200)),
+                {updateState, State#state{logged = false}};
             "Subscribe" ->
                 serve_client_request_subscribe(State, Request);
             "Unsubscribe" ->
@@ -101,12 +101,12 @@ serve_connection_request(State, Request) ->
             "AnnounceDistrictServer" ->
                 serve_server_request_announce(State, Request);
             _ ->
-                gen_tcp:send(State#cserver_state.sock, make_response(400)),
+                gen_tcp:send(State#state.sock, make_response(400)),
                 io:format("Unrecognized request.")
         end
     catch
         error:{badkey,_} ->
-            gen_tcp:send(State#cserver_state.sock, make_response("Registration", 400))
+            gen_tcp:send(State#state.sock, make_response("Registration", 400))
     end.
 
 % serve_client_request_registration(State, Request) -> {updateState, State} | _
@@ -115,30 +115,30 @@ serve_client_request_registration(State, Request) ->
                 ( maps:get("Name", Request#request.map)
                 , maps:get("Password", Request#request.map)
                 , maps:get("Domicile", Request#request.map)),
-    case auth_manager:put_account(State#cserver_state.authManager, sync, Account) of
+    case auth_manager:put_account(State#state.authManager, sync, Account) of
         ok ->
-            gen_tcp:send(State#cserver_state.sock, make_response("Registration", 201));
+            gen_tcp:send(State#state.sock, make_response("Registration", 201));
         _ ->
-            gen_tcp:send(State#cserver_state.sock, make_response("Registration", 403))
+            gen_tcp:send(State#state.sock, make_response("Registration", 403))
     end.
 
 % serve_client_request_authentication(State, Request) -> {updateState, State} | _
 serve_client_request_authentication(State, Request) ->
-    case auth_manager:auth_account( State#cserver_state.authManager
+    case auth_manager:auth_account( State#state.authManager
                                   , maps:get("Name", Request#request.map)
                                   , maps:get("Password", Request#request.map)) of
         ok ->
-            gen_tcp:send(State#cserver_state.sock, make_response("Authentication", 200)),
-            {updateState, State#cserver_state{logged = maps:get("Name", Request#request.map)}};
+            gen_tcp:send(State#state.sock, make_response("Authentication", 200)),
+            {updateState, State#state{logged = maps:get("Name", Request#request.map)}};
         _ ->
-            gen_tcp:send(State#cserver_state.sock, make_response("Authentication", 403))
+            gen_tcp:send(State#state.sock, make_response("Authentication", 403))
     end.
 
 % serve_client_request_authentication(State, Request) -> {updateState, State} | _
 serve_client_request_notifyLocation(State, Request) ->
-    case State#cserver_state.logged of
+    case State#state.logged of
         false ->
-            gen_tcp:send(State#cserver_state.sock, make_response("NotifyLocation", 401));
+            gen_tcp:send(State#state.sock, make_response("NotifyLocation", 401));
         ClientName ->
             Lat  = maps:get("Latitude", Request#request.map, false),
             Long = maps:get("Longitude", Request#request.map, false),
@@ -147,71 +147,105 @@ serve_client_request_notifyLocation(State, Request) ->
                  NoFalse ->
                     S = io_lib:format( "{\"username\":\"~p\",\"location\":{\"latitude\":~p,\"longitude\":~p},\"request_type\":\"NotifyLocation\",\"version\":\"1.0.0\"}"
                                      , [ClientName, Lat, Long]),
-                    District = auth_manager:account_district(auth_manager:get_account(State#cserver_state.authManager, ClientName)),
-                    case district_manager:send_await(State#cserver_state.distManager, District, list_to_binary(S)) of
+                    District = auth_manager:account_district(auth_manager:get_account(State#state.authManager, ClientName)),
+                    case district_manager:send_await(State#state.distManager, District, list_to_binary(S)) of
                         fail ->
-                    gen_tcp:send(State#cserver_state.sock, make_response("NotifyLocation", 404));
+                    gen_tcp:send(State#state.sock, make_response("NotifyLocation", 404));
                         Response ->
-                            gen_tcp:send(State#cserver_state.sock, Response)
+                            gen_tcp:send(State#state.sock, Response)
                     end;
                 true ->
-                    gen_tcp:send(State#cserver_state.sock, make_response("NotifyLocation", 404))
+                    gen_tcp:send(State#state.sock, make_response("NotifyLocation", 404))
             end
     end.
 
-% serve_client_request_probeLocation(State, Request) -> {updateState, State} | _
+% serve_client_request_probeLocation(State, Request) -> _
 serve_client_request_probeLocation(State, Request) ->
-    _ = maps:get("Latitude", Request#request.map),
-    _ = maps:get("Longitude", Request#request.map),
-    gen_tcp:send(State#cserver_state.sock, make_response("ProbeLocation", 404)).
+    case State#state.logged of
+        false ->
+            gen_tcp:send(State#state.sock, make_response("ProbeLocation", 401));
+        Username ->
+            Lat = maps:get("Latitude", Request#request.map, badkey),
+            Long = maps:get("Longitude", Request#request.map, badkey),
+            case lists:any(fun(X) -> X == badkey end, [Lat, Long]) of
+                true ->
+                    gen_tcp:send(State#state.sock, make_response("ProbeLocation", 404));
+                _ ->
+                    S = io_lib:format('{"location":{"latitude":~p,"longitude":~p},"RequestType":"ProbeLocation","version":"1.0.0"}'
+                                     , [Lat, Long]),
+                    District = auth_manager:account_district(auth_manager:get_account(State#state.authManager, Username)),
+                    case district_manager:send_await(State#state.distManager, District, list_to_binary(S)) of
+                        fail ->
+                    gen_tcp:send(State#state.sock, make_response("NotifyLocation", 404));
+                        Response ->
+                            gen_tcp:send(State#state.sock, Response)
+                    end
+            end
+    end.
+
+serve_client_request_notifyInfection(State, _Request) ->
+    case State#state.logged of
+        false ->
+            gen_tcp:send(State#state.sock, make_response("NotifyInfection", 401));
+        Username ->
+            S = io_lib:format('{"username":~p,"RequestType":"NotifyInfection","version":"1.0.0"}'
+                             , [Username]),
+            District = auth_manager:account_district(auth_manager:get_account(State#state.authManager, Username)),
+            case district_manager:send_await(State#state.distManager, District, list_to_binary(S)) of
+                fail ->
+                    gen_tcp:send(State#state.sock, make_response("NotifyInfection", 404));
+                Response ->
+                    gen_tcp:send(State#state.sock, Response)
+            end
+    end.
 
 % serve_client_request_subscription(State, Request) -> _
 serve_client_request_subscribe(State, Request) ->
-    case State#cserver_state.logged of
+    case State#state.logged of
         false ->
-            gen_tcp:send(State#cserver_state.sock, make_response("Subscribe", 401));
+            gen_tcp:send(State#state.sock, make_response("Subscribe", 401));
         Username ->
             case maps:get("district", Request#request.map, badkey) of
                 badkey ->
-                    gen_tcp:send(State#cserver_state.sock, make_response("Subscribe", 404));
+                    gen_tcp:send(State#state.sock, make_response("Subscribe", 404));
                 District ->
-                    case auth_manager:add_sub(State#cserver_state.authManager, Username, District) of
+                    case auth_manager:add_sub(State#state.authManager, Username, District) of
                         ok ->
-                            gen_tcp:send(State#cserver_state.sock, make_response("Subscribe", 201));
+                            gen_tcp:send(State#state.sock, make_response("Subscribe", 201));
                         _ ->
-                            gen_tcp:send(State#cserver_state.sock, make_response("Subscribe", 403))
+                            gen_tcp:send(State#state.sock, make_response("Subscribe", 403))
                     end
             end
     end.
 
 serve_client_request_unsubscribe(State, Request) ->
-    case State#cserver_state.logged of
+    case State#state.logged of
         false ->
-            gen_tcp:send(State#cserver_state.sock, make_response("Unsubscribe", 401));
+            gen_tcp:send(State#state.sock, make_response("Unsubscribe", 401));
         Username ->
             case maps:get("district", Request#request.map, badkey) of
                 badkey ->
-                    gen_tcp:send(State#cserver_state.sock, make_response("Unsubscribe", 404));
+                    gen_tcp:send(State#state.sock, make_response("Unsubscribe", 404));
                 District ->
-                    case auth_manager:rm_sub(State#cserver_state.authManager, Username, District) of
+                    case auth_manager:rm_sub(State#state.authManager, Username, District) of
                         ok ->
-                            gen_tcp:send(State#cserver_state.sock, make_response("Unsubscribe", 201));
+                            gen_tcp:send(State#state.sock, make_response("Unsubscribe", 201));
                         _ ->
-                            gen_tcp:send(State#cserver_state.sock, make_response("Unsubscribe", 403))
+                            gen_tcp:send(State#state.sock, make_response("Unsubscribe", 403))
                     end
             end
     end.
 
 serve_client_request_getSubscriptions(State, _Request) ->
-    case State#cserver_state.logged of
+    case State#state.logged of
         false ->
-            gen_tcp:send(State#cserver_state.sock, make_response("GetSubscriptions", 401));
+            gen_tcp:send(State#state.sock, make_response("GetSubscriptions", 401));
         Username ->
             Subs = auth_manager:account_subscriptions(
-                     auth_manager:get_account(State#cserver_state.authManager, Username)),
+                     auth_manager:get_account(State#state.authManager, Username)),
             IPs = lists:map(
                     fun(D) ->
-                        case district_manager:get(State#cserver_state.distManager, D) of
+                        case district_manager:get(State#state.distManager, D) of
                             unregistered -> unregistered;
                             Dist -> { D
                                     , district_manager:district_pub_ip(Dist)
@@ -225,7 +259,7 @@ serve_client_request_getSubscriptions(State, _Request) ->
                        end, FilteredIPs)),
             Response = list_to_binary(io_lib:format( '{"version": "1.0.0", "ReplyType": "GetSubscriptions", "servers":{~s}}'
                                                    , [StrIPs])),
-            gen_tcp:send(State#cserver_state.sock, Response)
+            gen_tcp:send(State#state.sock, Response)
     end.
 
 serve_server_request_announce(State, Request) ->
@@ -236,16 +270,16 @@ serve_server_request_announce(State, Request) ->
     PubPort = maps:get("pub_notifications_port", Request#request.map, badkey),
     case lists:any(fun(X) -> X == badkey end, [Name, Ip, Port, PubIp, PubPort]) of
         false ->
-            District = district_manager:district_from(Name, Ip, Port, PubIp, PubPort, State#cserver_state.sock),
-            case district_manager:put(State#cserver_state.distManager, District) of
+            District = district_manager:district_from(Name, Ip, Port, PubIp, PubPort, State#state.sock),
+            case district_manager:put(State#state.distManager, District) of
                 ok ->
-                    gen_tcp:send(State#cserver_state.sock, make_response("AnnounceDistrictServer", 201));
+                    gen_tcp:send(State#state.sock, make_response("AnnounceDistrictServer", 201));
                 fail ->
-                    gen_tcp:send(State#cserver_state.sock, make_response("AnnounceDistrictServer", 403))
+                    gen_tcp:send(State#state.sock, make_response("AnnounceDistrictServer", 403))
             end,
             {ended};
         _ ->
-            gen_tcp:send(State#cserver_state.sock, make_response("AnnounceDistrictServer", 400))
+            gen_tcp:send(State#state.sock, make_response("AnnounceDistrictServer", 400))
     end.
 
 make_response(Code) ->
