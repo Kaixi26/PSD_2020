@@ -1,6 +1,6 @@
-# HelloWorld
+# Diretorio
 
-How to start the HelloWorld application
+How to start the Diretorio application
 ---
 
 1. Run `mvn package` to build your application
