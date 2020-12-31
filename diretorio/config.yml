@@ -1,0 +1,6 @@
+template: Hello, %s!
+defaultName: Boss
+server:
+  applicationConnectors:
+    - type: http
+      port: 8080
