@@ -1,7 +1,6 @@
 package helloworld;
 
 import helloworld.resources.DistrictResource;
-import helloworld.resources.InfectedResource;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
