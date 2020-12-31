@@ -19,6 +19,8 @@ import javax.ws.rs.core.Response;
 public class DistrictResource {
     private Map<String, ArrayList<User>> users = new HashMap<>();
     private Map<String, ArrayList<User>> infecteds = new HashMap<>();
+    private float average_sick_encounter=0;
+    private int number_post_encounter=0;
 
     public DistrictResource() {
         ArrayList<User> users1 = new ArrayList<>();
@@ -102,11 +104,59 @@ public class DistrictResource {
             return new ArrayList<>().size();
         return infecteds.get(district.get()).size();
     }
+    @GET
+    @Path("/top5peopleatsametime")
+    public ArrayList<String> getTop5peopleatsametime() {
+        ArrayList<String> dist = new ArrayList<>();
+        ArrayList<Integer> size = new ArrayList<>();
+
+     users.forEach((key, tab) -> {
+
+
+        int min =tab.size();
+        if( size.size()<5){
+            size.add(min);
+            dist.add(key);
+        }
+        else{
+            int minimo= Collections.min(size);
+            if (minimo< min){
+                int index = size.indexOf(minimo);
+                size.remove(index);
+                dist.remove(index);
+                size.add(min);
+                dist.add(key);
+            }
+        }
+
+     });
+
+
+       return dist;
+    }
+    @GET
+    @Path("/medioencontrosdoentes")
+    public float getMedioencontrosdoentes() {
+       return average_sick_encounter;
+    }
+
 
     @GET
     @Path("/top5")
     public ArrayList<String> getTop5() {
        return null;
+    }
+    @POST
+    @Path("/add/encontro/{numero}")
+    public Response addUser(@PathParam("numero") int numero) {
+        
+        
+        average_sick_encounter = ( average_sick_encounter*number_post_encounter + numero) / (number_post_encounter+1);
+        number_post_encounter++;
+
+            return Response.ok().build();
+        
+
     }
 
 
