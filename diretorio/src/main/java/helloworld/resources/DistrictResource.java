@@ -4,13 +4,7 @@ import helloworld.api.User;
 import org.checkerframework.checker.units.qual.A;
 
 import java.util.*;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -29,16 +23,30 @@ public class DistrictResource {
         User u3 = new User("teste3");
         User u4 = new User("teste4");
         User u5 = new User("teste5");
+
         users1.add(u1);
         users1.add(u2);
         users1.add(u3);
-        users.put("Braga",users1);
+
         ArrayList<User> users2 = new ArrayList<>();
         users2.add(u4);
         users2.add(u5);
-        users.put("Viana",users2);
 
-        infecteds.put("Porto", users1);
+        ArrayList<User> users3 = new ArrayList<>();
+        users3.add(u5);
+
+        users.put("Braga",users2);
+        users.put("Viana",users1);
+        users.put("Porto",users1);
+        users.put("Lisboa",users1);
+        users.put("Guima",users1);
+        users.put("Faro",users3);
+
+        infecteds.put("Porto", users2);
+        infecteds.put("Braga", users3);
+        infecteds.put("Viana", users1);
+        infecteds.put("Faro", users1);
+
 
     }
 
@@ -144,8 +152,30 @@ public class DistrictResource {
     @GET
     @Path("/top5")
     public ArrayList<String> getTop5() {
-       return null;
+       Map<String,Double> racio = new HashMap<>();
+       ArrayList<String> top5 = new ArrayList<>();
+       for( String dist : users.keySet()){
+           Double sizeUsers = (double)users.get(dist).size();
+           if(infecteds.containsKey(dist)){
+               Double sizeInfects = (double)infecteds.get(dist).size();
+               racio.put(dist,sizeInfects/sizeUsers);
+           }
+           else {
+               racio.put(dist, (double) 0);
+           }
+       }
+
+       racio.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .limit(5)
+                .forEachOrdered(x -> top5.add(x.getKey()));
+
+       return top5;
+
     }
+
+
     @POST
     @Path("/add/encontro/{numero}")
     public Response addUser(@PathParam("numero") int numero) {
