@@ -12,8 +12,8 @@ public class FrontendConnection {
     private BufferedReader in;
     private PrintWriter out;
 
-    public FrontendConnection(String ip, int port) throws IOException {
-        this.socket = new Socket(InetAddress.getByName(ip), port);
+    public FrontendConnection(DistrictServerConfigurations configurations) throws IOException {
+        this.socket = new Socket(InetAddress.getByName(configurations.getFrontendIP()), configurations.getFrontendPort());
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         this.out = new PrintWriter(this.socket.getOutputStream());
     }

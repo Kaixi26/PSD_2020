@@ -20,7 +20,7 @@ public class TaskManager extends Thread {
         this.gson = gson;
         this.frontendConnection = frontendConnection;
         this.configurations = configurations;
-        this.manager = new MasterManager(this.configurations.getDistrictDimension(), context);
+        this.manager = new MasterManager(context, configurations.getDistrictName(), this.configurations.getDistrictDimension());
     }
 
     @Override
