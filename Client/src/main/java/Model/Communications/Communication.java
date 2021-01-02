@@ -32,19 +32,38 @@ public class Communication {
         }
     }
 
-    public void authenticate(String name,String pass){
-        new Authentication().sendAuthenticationReq(name,pass,socket);
+    //Método que autentica um utilizador, retorna true/false para sucesso/insucesso
+    public boolean authenticate(String name,String pass){
+        Authentication a = new Authentication();
+        a.sendAuthenticationReq(name,pass,socket);
+        return a.receiveAuthenticationRes(socket);
     }
 
-    public void register(String name,String pass,String dom){
-        new Registration().sendRegistrationReq(name,pass,dom,socket);
+    //Método que regista um utilizador, retorna true/false para sucesso/insucesso
+    public boolean register(String name,String pass,String dom){
+        Registration r = new Registration();
+        r.sendRegistrationReq(name,pass,dom,socket);
+        return r.receiveRegistrationRes(socket);
     }
 
-    public void position(int lat,int lon){
-        new Location().sendNotifyLocationReq(lat,lon,socket);
+    //Método que atualiza a localização de um utilizador, retorna true/false para sucesso/insucesso
+    public boolean position(int lat,int lon){
+        Location l = new Location();
+        l.sendNotifyLocationReq(lat,lon,socket);
+        return l.receiveNotifyLocationRes(socket);
     }
 
-    public void probe(int lat,int lon){
-        new Location().sendProbeLocationReq(lat,lon,socket);
+    //Método que obtém o número de pessoas numa dada localização do seu distrito
+    public int probe(int lat,int lon){
+        Location l = new Location();
+        l.sendProbeLocationReq(lat,lon,socket);
+        return l.receiveProbeLocationRes(socket);
+    }
+
+    //Método que comunica ao servidor que o utilizador está infetado
+    public boolean sick(){
+        Infection i = new Infection();
+        i.sendInfectedReq(socket);
+        return i.receiveInfectedRes(socket);
     }
 }

@@ -4,6 +4,7 @@ import Model.Communications.Communication;
 import View.View;
 
 import java.io.BufferedReader;
+import java.io.Console;
 import java.io.InputStreamReader;
 
 public class Controller {
@@ -26,12 +27,17 @@ public class Controller {
                 case "login":
                     Runtime.getRuntime().exec("clear");
                     view.showLogin();
-                    model.authenticate(view.getUsername(),view.getPassword());
+                    if (!model.authenticate(view.getUsername(), view.getPassword()))
+                        System.out.println("Error in login"); //TODO view for this
+                    else System.out.println("Login successful"); //TODO view for this
+                    new LoggedController(model,view).init();
                     break;
                 case "register":
                     Runtime.getRuntime().exec("clear");
                     view.showRegister();
-                    model.register(view.getUsername(), view.getPassword(), view.getDomicile());
+                    if(!model.register(view.getUsername(), view.getPassword(), view.getDomicile()))
+                        System.out.println("Error in register"); //TODO view for this
+                    else System.out.println("Register successful"); //TODO view for this
                     break;
                 case "exit":
                     alive = false;

@@ -1,9 +1,6 @@
 package Model.Communications;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.util.Properties;
 
@@ -19,6 +16,18 @@ public abstract class CommunicationType {
             out.println(json);
         } catch (IOException ex) {
             ex.printStackTrace();
+        }
+    }
+
+    public String receiveResponse(Socket socket){
+        try {
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(socket.getInputStream()));
+            String json = in.readLine();
+            return json;
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return "error";
         }
     }
 }
