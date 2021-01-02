@@ -98,6 +98,8 @@ serve_connection_request(State, Request) ->
                 serve_client_request_unsubscribe(State, Request);
             "GetSubscriptions" ->
                 serve_client_request_getSubscriptions(State, Request);
+            "DistrictRequest" ->
+                serve_client_request_districtRequest(State, Request);
             "AnnounceDistrictServer" ->
                 serve_server_request_announce(State, Request);
             _ ->
@@ -260,6 +262,36 @@ serve_client_request_getSubscriptions(State, _Request) ->
             Response = list_to_binary(io_lib:format( '{"version": "1.0.0", "ReplyType": "GetSubscriptions", "servers":{~s}}'
                                                    , [StrIPs])),
             gen_tcp:send(State#state.sock, Response)
+    end.
+
+serve_client_request_districtRequest(State, _Request) ->
+    case State#state.logged of
+        false ->
+            gen_tcp:send(State#state.sock, make_response("DistrictRequest", 401));
+        Username ->
+            case auth_manager:get_account(State#state.authManager, Username) of
+                unregistered ->
+                    gen_tcp:send(State#state.sock, make_response("DistrictRequest", 404));
+                Account ->
+                    case district_manager:get(State#state.distManager, auth_manager:account_district(Account)) of
+                        unregistered ->
+                            gen_tcp:send(State#state.sock, make_response("DistrictRequest", 404));
+                        Dist ->
+                            io:fwrite("cenas\n", []),
+                            io:fwrite("~p\n", [district_manager:district_ip(Dist)]),
+                            io:fwrite("~p\n", [district_manager:district_ip(Dist)]),
+                            io:fwrite("~p\n", [district_manager:district_port(Dist)]),
+                            io:fwrite("~p\n", [district_manager:district_pub_ip(Dist)]),
+                            io:fwrite("~p\n", [district_manager:district_pub_port(Dist)]),
+                            Response = list_to_binary(io_lib:format( '{"version": "1.0.0", "ReplyType": "DistrictRequest", "server":{"name":~p, "ip":~p, "port":~p, "pub_ip":~p, "pub_port":~p}}'
+                                                                   , [ district_manager:district_name(Dist)
+                                                                     , district_manager:district_ip(Dist)
+                                                                     , district_manager:district_port(Dist)
+                                                                     , district_manager:district_pub_ip(Dist)
+                                                                     , district_manager:district_pub_port(Dist)])),
+                            gen_tcp:send(State#state.sock, Response)
+                    end
+            end
     end.
 
 serve_server_request_announce(State, Request) ->
