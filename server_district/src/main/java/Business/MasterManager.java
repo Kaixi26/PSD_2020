@@ -19,8 +19,8 @@ public class MasterManager {
     private ClientsLocationManager clientsLocationManager;
     private ClientsContactsManager clientsContactsManager;
 
-    public MasterManager(int districtDimension, ZContext context) {
-        this.districtMapManager = new DistrictMapManager(districtDimension);
+    public MasterManager(ZContext context, String districtName, int districtDimension) {
+        this.districtMapManager = new DistrictMapManager(context, districtName, districtDimension);
         this.clientsLocationManager = new ClientsLocationManager();
         this.clientsContactsManager = new ClientsContactsManager();
     }

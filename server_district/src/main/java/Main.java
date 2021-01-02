@@ -55,8 +55,7 @@ public class Main {
         AnnounceDistrictServerRequest announceDistrictServerRequest = new AnnounceDistrictServerRequest(districtName, configurations.getDistrictServerIP(), configurations.getDistrictServerPort(), configurations.getPublicNotificationsIP(), configurations.getPublicNotificationsPort());
 
         Gson gson = new Gson();
-        FrontendConnection frontendConnection = new FrontendConnection(configurations.getFrontendIP(), configurations.getFrontendPort());
-        //Announcement
+        FrontendConnection frontendConnection = new FrontendConnection(configurations);
         frontendConnection.writeLine(gson.toJson(announceDistrictServerRequest));
 
         String responseLine;
@@ -66,7 +65,7 @@ public class Main {
             if (announceResponse.getStatusCode() >= 200 && announceResponse.getStatusCode() < 300) {
                 System.out.println("Connection Accepted");
                 final ZContext context = new ZContext();
-                new PublicNotificationsSender(context, configurations.getPublicNotificationsIP(), configurations.getPublicNotificationsPort());
+                new PublicNotificationsSender(context, configurations).start();
                 new TaskManager(gson, frontendConnection, configurations, context).start();
             } else {
                 System.out.println("Connection Refused");
