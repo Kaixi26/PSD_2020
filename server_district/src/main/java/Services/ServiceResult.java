@@ -5,7 +5,7 @@ public class ServiceResult<TResult> {
     private final TResult result;
 
     public ServiceResult(boolean success, TResult result) {
-        this.success = false;
+        this.success = success;
         this.result = result;
     }
 

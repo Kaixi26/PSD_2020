@@ -12,11 +12,11 @@ public class ClientsContacts {
         this.contacts = new HashSet<>();
     }
 
-    public synchronized void addContact(@NotNull String contact) {
+    public void addContact(@NotNull String contact) {
         this.contacts.add(contact);
     }
 
-    public synchronized Set<String> getContacts() {
+    public Set<String> getContacts() {
         Set<String> result = new HashSet<>();
         this.contacts.forEach(username -> result.add(username));
         return result;

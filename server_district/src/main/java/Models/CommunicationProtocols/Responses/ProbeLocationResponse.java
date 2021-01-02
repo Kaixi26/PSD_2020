@@ -11,6 +11,4 @@ public class ProbeLocationResponse extends ResponseProtocol {
         super(CommunicationType.ProbeLocation, code);
         this.clientsNumber = clientsNumber;
     }
-
-
 }
