@@ -3,6 +3,7 @@ package Business;
 import Models.Location;
 import Services.ServiceResult;
 import org.jetbrains.annotations.NotNull;
+import org.zeromq.ZContext;
 
 import java.util.Set;
 
@@ -10,13 +11,13 @@ public class DistrictMapManager {
     private final int dimension;
     private DistrictMapCellManager[][] map;
 
-    public DistrictMapManager(int dimension) {
+    public DistrictMapManager(ZContext context, String name, int dimension) {
         this.dimension = dimension;
         this.map = new DistrictMapCellManager[this.dimension][this.dimension];
 
         for(int i = 0 ; i < this.dimension ; i++){
-            for(int j = 0 ; i < this.dimension ; j++){
-                this.map[i][j] = new DistrictMapCellManager();
+            for(int j = 0 ; j < this.dimension ; j++){
+                this.map[i][j] = new DistrictMapCellManager(context, name, new Location(i,j));
             }
         }
     }

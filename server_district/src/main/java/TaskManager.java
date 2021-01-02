@@ -1,48 +1,64 @@
+import Auxiliar.DistrictServerConfigurations;
+import Auxiliar.FrontendConnection;
 import Business.MasterManager;
+import Models.CommunicationProtocols.Requests.NotifyInfectionRequest;
+import Models.CommunicationProtocols.Requests.NotifyLocationRequest;
+import Models.CommunicationProtocols.Requests.ProbeLocationRequest;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import org.zeromq.ZContext;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.Socket;
 
 public class TaskManager extends Thread {
     private Gson gson;
-    private Socket socket;
-    private BufferedReader in;
-    private PrintWriter out;
+    private FrontendConnection frontendConnection;
+    private  DistrictServerConfigurations configurations;
     private MasterManager manager;
 
-    public TaskManager() throws IOException {
-        this.gson = new Gson();
+    public TaskManager(Gson gson, FrontendConnection frontendConnection, DistrictServerConfigurations configurations, ZContext context) {
+        this.gson = gson;
+        this.frontendConnection = frontendConnection;
+        this.configurations = configurations;
+        this.manager = new MasterManager(context, configurations.getDistrictName(), this.configurations.getDistrictDimension());
     }
 
     @Override
     public void run(){
-        String jsonRequest, requestType;
-        JsonObject jobj;
-
-
+        String jsonRequest, jsonResponse, requestType;
+        Object requestModel, responseModel = null;
+        JsonObject jObj;
 
         try {
-            while ((jsonRequest = in.readLine()) != null) {
+            while ((jsonRequest = this.frontendConnection.readLine()) != null) {
 
-                jobj = new Gson().fromJson(jsonRequest, JsonObject.class);
-                requestType = jobj.get("RequestType").getAsString();
+                jObj = this.gson.fromJson(jsonRequest, JsonObject.class);
+                requestType = jObj.get("RequestType").getAsString();
 
                 switch (requestType){
-                    case "NotifyLocation":
-
+                    case "NotifyInfection":
+                        requestModel = this.gson.fromJson(jsonRequest, NotifyInfectionRequest.class);
+                        responseModel = this.manager.clientInfected((NotifyInfectionRequest) requestModel);
                         break;
-                    case "ProbeLocation":
 
+                    case "NotifyLocation":
+                        requestModel = this.gson.fromJson(jsonRequest, NotifyLocationRequest.class);
+                        responseModel = this.manager.moveClientToLocation((NotifyLocationRequest) requestModel);
+                        break;
+
+                    case "ProbeLocation":
+                        requestModel = this.gson.fromJson(jsonRequest, ProbeLocationRequest.class);
+                        responseModel = this.manager.getNumberOfClientsInLocation((ProbeLocationRequest) requestModel);
                         break;
                     default:
+                        System.out.println("Internal Server Error: The request type is invalid");
                         break;
                 }
+                jsonResponse = this.gson.toJson(responseModel);
+                this.frontendConnection.writeLine(jsonResponse);
             }
         } catch (IOException e) {
+            System.out.println("Internal Server Error : Something Went Wrong");
             e.printStackTrace();
         }
     }

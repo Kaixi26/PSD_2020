@@ -1,85 +1,76 @@
+import Auxiliar.DistrictServerConfigurations;
+import Auxiliar.FrontendConnection;
 import Models.CommunicationProtocols.Requests.AnnounceDistrictServerRequest;
-import Models.CommunicationProtocols.Requests.NotifyInfectionRequest;
-import Models.CommunicationProtocols.Requests.NotifyLocationRequest;
-import Models.CommunicationProtocols.Requests.ProbeLocationRequest;
 import Models.CommunicationProtocols.Responses.AnnounceDistrictServerResponse;
-import Models.CommunicationProtocols.Responses.NotifyInfectionResponse;
-import Models.CommunicationProtocols.Responses.NotifyLocationResponse;
-import Models.CommunicationProtocols.Responses.ProbeLocationResponse;
-import Models.Location;
-import Business.ClientsLocationManager;
+import Services.PublicNotificationsSender;
 import com.google.gson.Gson;
+import org.springframework.core.io.FileSystemResource;
+import org.zeromq.ZContext;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.util.Properties;
-import java.util.Set;
 
 public class Main {
-    private void loadConfigFile() {
-        try (InputStream input = new FileInputStream("src/main/resources/config.properties")) {
-            Properties prop = new Properties();
-            prop.load(input);
-            String frontend_ip = prop.getProperty("Server.frontend.ip");
-            int frontend_port = Integer.parseInt(prop.getProperty("Server.frontend.port"));
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+    /**
+     * @param districtName
+     * @return DistrictServerCon
+     * @throws IOException
+     */
+    public static DistrictServerConfigurations loadConfigurationsFile(String districtName) throws IOException {
+        InputStream input = new FileInputStream("src/main/resources/config.properties");
+        Properties prop = new Properties();
+        prop.load(input);
+        String frontend_ip = prop.getProperty("Server.frontend.ip");
+        int frontend_port = Integer.parseInt(prop.getProperty("Server.frontend.port"));
+        String directory_ip = prop.getProperty("Directory.ip");
+        int directory_port = Integer.parseInt(prop.getProperty("Directory.port"));
+        int district_dimension = Integer.parseInt(prop.getProperty("District.dimension." + districtName));
+        String server_district_ip = prop.getProperty("District.server_ip." + districtName);
+        int server_district_port = Integer.parseInt(prop.getProperty("District.server_port." + districtName));
+        String public_notifications_ip = prop.getProperty("District.public_notifications_ip." + districtName);
+        int public_notifications_port = Integer.parseInt(prop.getProperty("District.public_notifications_port." + districtName));
+        return new DistrictServerConfigurations(districtName, frontend_ip, frontend_port, directory_ip, directory_port, district_dimension, server_district_ip, server_district_port, public_notifications_ip, public_notifications_port);
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+
+    /**
+     *
+     * @param args
+     * @throws IOException
+     */
+    public static void main(String[] args) throws IOException {
+        if(args.length < 1) {
+            System.out.println("Insufficient Arguments");
+            System.exit(1);
+        }
+
+        String districtName = args[0];
+        System.out.println("District Name: " + districtName);
+
+        DistrictServerConfigurations configurations = loadConfigurationsFile(districtName.toLowerCase());
+        AnnounceDistrictServerRequest announceDistrictServerRequest = new AnnounceDistrictServerRequest(districtName, configurations.getDistrictServerIP(), configurations.getDistrictServerPort(), configurations.getPublicNotificationsIP(), configurations.getPublicNotificationsPort());
+
         Gson gson = new Gson();
-        //var request = gson.fromJson("{\"location\":{\"latitude\":12,\"longitude\":11},\"request_type\":\"ProbeLocation\",\"version\":\"1.0.0\"}", ProbeLocationRequest.class);
-        var request = new AnnounceDistrictServerRequest("braga","127.0.9.2",5000,"180.12.43.2",80);
-        System.out.println(gson.toJson(request));
+        FrontendConnection frontendConnection = new FrontendConnection(configurations);
+        frontendConnection.writeLine(gson.toJson(announceDistrictServerRequest));
 
-        Set<String> s = new HashSet<>();
-        s.add("antonio");
-        s.add("rui");
-        var response = new AnnounceDistrictServerResponse(200);
-        System.out.println(gson.toJson(response));
-    }
+        String responseLine;
+        while ((responseLine = frontendConnection.readLine()) != null) {
+            AnnounceDistrictServerResponse announceResponse = gson.fromJson(responseLine, AnnounceDistrictServerResponse.class);
 
-
-    public static class Cenas extends Thread{
-        public ClientsLocationManager clientsLocationManager;
-        public String user;
-
-        public Cenas(String user,ClientsLocationManager clientsLocationManager){
-            this.clientsLocationManager = clientsLocationManager;
-            this.user = user;
-        }
-
-        @Override
-        public void run() {
-            for(int i = 0; i<10000 ; i++){
-                clientsLocationManager.putClientLocation(user, new Location(i,i*2+3));
-                if(i % 2 == 0){
-                    Location l = clientsLocationManager.getClientLocation(user);
-                    //System.out.println(user + "          "+ l.getLatitude() + "    " + l.getLongitude() +"\n");
-                }
+            if (announceResponse.getStatusCode() >= 200 && announceResponse.getStatusCode() < 300) {
+                System.out.println("Connection Accepted");
+                final ZContext context = new ZContext();
+                new PublicNotificationsSender(context, configurations).start();
+                new TaskManager(gson, frontendConnection, configurations, context).start();
+            } else {
+                System.out.println("Connection Refused");
+                System.exit(1);
             }
         }
     }
 }
-
-        /*
-        String json = "{\"latitude\":1,\"longitude\":4}";
-        System.out.println(json);
-        Location l = gson.fromJson(json, Location.class);
-        System.out.println(l.getLatitude() + " " + l.getLongitude());*/
-
-
-        //Location location = gson.fromJson(json, Location.class);
-        //System.out.println(location.getLatitude() + " " + location.getLongitude());
-        //NotifyLocation n = new NotifyLocation("eu",1,2);
-
-        /*List<String> s = new ArrayList<>();
-        s.add("1");
-        s.add("2");
-        s.add("3");
-        Infecteds n = new Infecteds(s);
-        json = gson.toJson(n);
-        System.out.println(json);*/
