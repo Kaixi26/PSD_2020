@@ -15,7 +15,7 @@ public class DistrictMapManager {
         this.map = new DistrictMapCellManager[this.dimension][this.dimension];
 
         for(int i = 0 ; i < this.dimension ; i++){
-            for(int j = 0 ; i < this.dimension ; j++){
+            for(int j = 0 ; j < this.dimension ; j++){
                 this.map[i][j] = new DistrictMapCellManager();
             }
         }

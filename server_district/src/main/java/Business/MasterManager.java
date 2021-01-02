@@ -10,6 +10,7 @@ import Models.Location;
 import Services.ServiceResult;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
+import org.zeromq.ZContext;
 
 import java.util.Set;
 
@@ -18,7 +19,7 @@ public class MasterManager {
     private ClientsLocationManager clientsLocationManager;
     private ClientsContactsManager clientsContactsManager;
 
-    public MasterManager(int districtDimension) {
+    public MasterManager(int districtDimension, ZContext context) {
         this.districtMapManager = new DistrictMapManager(districtDimension);
         this.clientsLocationManager = new ClientsLocationManager();
         this.clientsContactsManager = new ClientsContactsManager();
