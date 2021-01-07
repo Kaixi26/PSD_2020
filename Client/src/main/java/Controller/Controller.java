@@ -3,15 +3,18 @@ package Controller;
 import Model.Communications.Communication;
 import View.View;
 
+import javax.imageio.IIOException;
 import java.io.BufferedReader;
 import java.io.Console;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.ConnectException;
 
 public class Controller {
     private Communication model;
     private View view;
 
-    public Controller(){
+    public Controller() throws IOException {
         this.model = new Communication();
         this.view = new View();
     }
@@ -29,8 +32,10 @@ public class Controller {
                     view.showLogin();
                     if (!model.authenticate(view.getUsername(), view.getPassword()))
                         System.out.println("Error in login"); //TODO view for this
-                    else System.out.println("Login successful"); //TODO view for this
-                    new LoggedController(model,view).init();
+                    else {
+                        System.out.println("Login successful"); //TODO view for this
+                        new LoggedController(model,view).init();
+                    }
                     break;
                 case "register":
                     Runtime.getRuntime().exec("clear");
@@ -47,7 +52,10 @@ public class Controller {
             }
         }
 
-        } catch (Exception ex){
+        } catch (ConnectException e){
+            System.out.println();
+        }
+        catch (Exception ex){
             System.out.println(ex.getStackTrace());
         }
     }

@@ -3,22 +3,19 @@ package Model.Communications;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.util.Properties;
 
 public class Communication {
     private String ip;
     private int port;
-    private Socket socket;
+    private CommunicationHandler com;
 
-    public Communication(){
-        try {
-            loadConfigFile();
-            this.socket = new Socket(ip,port);
-        }
-        catch (Exception ex){
-            ex.printStackTrace();
-        }
+    public Communication() throws IOException {
+        loadConfigFile();
+        Socket socket = new Socket(ip, port);
+        this.com = new CommunicationHandler(socket);
     }
 
     private void loadConfigFile(){
@@ -34,36 +31,44 @@ public class Communication {
 
     //Método que autentica um utilizador, retorna true/false para sucesso/insucesso
     public boolean authenticate(String name,String pass){
-        Authentication a = new Authentication();
-        a.sendAuthenticationReq(name,pass,socket);
-        return a.receiveAuthenticationRes(socket);
+        Authentication a = new Authentication(com);
+        a.sendAuthenticationReq(name,pass);
+        return a.receiveAuthenticationRes();
     }
 
     //Método que regista um utilizador, retorna true/false para sucesso/insucesso
     public boolean register(String name,String pass,String dom){
-        Registration r = new Registration();
-        r.sendRegistrationReq(name,pass,dom,socket);
-        return r.receiveRegistrationRes(socket);
+        Registration r = new Registration(com);
+        r.sendRegistrationReq(name,pass,dom);
+        return r.receiveRegistrationRes();
     }
 
     //Método que atualiza a localização de um utilizador, retorna true/false para sucesso/insucesso
     public boolean position(int lat,int lon){
-        Location l = new Location();
-        l.sendNotifyLocationReq(lat,lon,socket);
-        return l.receiveNotifyLocationRes(socket);
+        Location l = new Location(com);
+        l.sendNotifyLocationReq(lat,lon);
+        return l.receiveNotifyLocationRes();
     }
 
     //Método que obtém o número de pessoas numa dada localização do seu distrito
     public int probe(int lat,int lon){
-        Location l = new Location();
-        l.sendProbeLocationReq(lat,lon,socket);
-        return l.receiveProbeLocationRes(socket);
+        Location l = new Location(com);
+        l.sendProbeLocationReq(lat,lon);
+        return l.receiveProbeLocationRes();
     }
 
     //Método que comunica ao servidor que o utilizador está infetado
     public boolean sick(){
-        Infection i = new Infection();
-        i.sendInfectedReq(socket);
-        return i.receiveInfectedRes(socket);
+        Infection i = new Infection(com);
+        i.sendInfectedReq();
+        return i.receiveInfectedRes();
+    }
+
+    public boolean contact(){
+        return !com.receiveNotification().equals("error");
+    }
+
+    public void clearQueue(){
+        com.clearNotificationQueue();
     }
 }

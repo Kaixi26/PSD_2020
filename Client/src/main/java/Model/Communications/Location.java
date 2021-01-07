@@ -4,35 +4,37 @@ import com.google.gson.Gson;
 
 import java.net.Socket;
 
-public class Location extends CommunicationType{
+public class Location {
     private Gson gson;
+    private CommunicationHandler com;
 
-    public Location(){
+    public Location(CommunicationHandler com){
         this.gson = new Gson();
+        this.com = com;
     }
 
-    public void sendNotifyLocationReq(int latitude, int longitude, Socket socket){
+    public void sendNotifyLocationReq(int latitude, int longitude){
         NotifyLocationReqObj tmp = new NotifyLocationReqObj(latitude,longitude);
         String json = gson.toJson(tmp);
-        sendRequest(json,socket);
+        com.sendRequest(json);
     }
 
-    public void sendProbeLocationReq(int latitude, int longitude, Socket socket){
+    public void sendProbeLocationReq(int latitude, int longitude){
         ProbeLocationReqObj tmp = new ProbeLocationReqObj(latitude,longitude);
         String json = gson.toJson(tmp);
-        sendRequest(json,socket);
+        com.sendRequest(json);
     }
 
     //Método que espera pela resposta do servidor front-end aṕos ser feito o pedido de NotifyLocation
-    public boolean receiveNotifyLocationRes(Socket socket){
-        String json = receiveResponse(socket);
+    public boolean receiveNotifyLocationRes(){
+        String json = com.receiveResponse();
         NotifyLocationResObj res = gson.fromJson(json, NotifyLocationResObj.class);
         return res.code.equals("200"); //TODO TEST + code
     }
 
     //Método que espera pela resposta do servidor front-end aṕos ser feito o pedido de NotifyLocation
-    public int receiveProbeLocationRes(Socket socket){
-        String json = receiveResponse(socket);
+    public int receiveProbeLocationRes(){
+        String json = com.receiveResponse();
         ProbeLocationResObj res = gson.fromJson(json, ProbeLocationResObj.class);
         if(res.code.equals("200"))
             return res.clientsNumber;
@@ -55,7 +57,7 @@ public class Location extends CommunicationType{
     }
 
     //Objeto que representa uma resposta de um pedido NotifyLocation
-    private static class NotifyLocationResObj {
+    private static class NotifyLocationResObj { //{"ResponseType":"NotifyLocation","code":200,"version":"1.0.0"}
 
         private final String version = "1.0.0";
         private final String ResponseType = "NotifyLocation";
@@ -64,7 +66,7 @@ public class Location extends CommunicationType{
     }
 
     //Objeto que representa uma resposta a um pedido ProbeLocation
-    private static class ProbeLocationResObj {
+    private static class ProbeLocationResObj { //{"clientsNumber":11,"ResponseType":"ProbeLocation","code":200,"version":"1.0.0"}
 
         public String version = "1.0.0";
         public String ResponseType = "ProbeLocation";

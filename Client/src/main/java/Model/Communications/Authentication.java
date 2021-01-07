@@ -4,26 +4,27 @@ package Model.Communications;
 
 import com.google.gson.Gson;
 
-import java.net.Socket;
 
-public class Authentication extends CommunicationType {
+public class Authentication {
     private final Gson gson;
+    private final CommunicationHandler com;
 
-    public Authentication(){
+    public Authentication(CommunicationHandler com){
         this.gson = new Gson();
+        this.com = com;
     }
 
 
     //Método que envia o pedido de autenticação ao servidor front-end
-    public void sendAuthenticationReq(String name, String pass,Socket socket){
+    public void sendAuthenticationReq(String name, String pass){
         AuthenticationReqObj tmp = new AuthenticationReqObj(name, pass);
         String json = gson.toJson(tmp);
-        sendRequest(json,socket);
+        com.sendRequest(json);
     }
 
     //Método que espera pela resposta do servidor front-end aṕos ser feito o pedido de autenticação
-    public boolean receiveAuthenticationRes(Socket socket){
-        String json = receiveResponse(socket);
+    public boolean receiveAuthenticationRes(){
+        String json = com.receiveResponse();
         AuthenticationResObj res = gson.fromJson(json,AuthenticationResObj.class);
         return res.code.equals("200");
     }
@@ -43,7 +44,7 @@ public class Authentication extends CommunicationType {
     }
 
     //Objeto que corresponde ao json recebido após ter sido enviado um pedido de autenticação ao servidor front-end
-    private static class AuthenticationResObj{
+    private static class AuthenticationResObj{ //{"version":"1.0.0","ReplyType":"Authentication","code": 200}
 
         public final String version = "1.0.0";
         public final String ReplyType = "Authentication";

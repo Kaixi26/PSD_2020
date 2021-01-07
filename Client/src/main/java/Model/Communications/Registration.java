@@ -6,24 +6,26 @@ import com.google.gson.Gson;
 
 import java.net.Socket;
 
-public class Registration extends CommunicationType {
+public class Registration {
 
-    private Gson gson;
+    private final Gson gson;
+    private final CommunicationHandler com;
 
-    public Registration(){
+    public Registration(CommunicationHandler com){
         this.gson = new Gson();
+        this.com = com;
     }
 
     //Método que cria e envia um pedido em json ao servidor front-end no socket fornecido
-    public void sendRegistrationReq(String name, String pass, String dom, Socket socket){
+    public void sendRegistrationReq(String name, String pass, String dom){
         RegistrationReqObj tmp = new RegistrationReqObj(name, pass, dom);
         String json = gson.toJson(tmp);
-        sendRequest(json,socket);
+        com.sendRequest(json);
     }
 
     //Método que espera pela resposta do servidor front-end após o pedido de registo
-    public boolean receiveRegistrationRes(Socket socket){
-        String json = receiveResponse(socket);
+    public boolean receiveRegistrationRes(){
+        String json = com.receiveResponse();
         RegistrationResObj res = gson.fromJson(json,RegistrationResObj.class);
         return res.code.equals("201");
     }
@@ -44,7 +46,7 @@ public class Registration extends CommunicationType {
         }
     }
     //Objeto que corresponde ao json recibido como resposta do servidor front-end após um pedido de registo
-    private static class RegistrationResObj{
+    private static class RegistrationResObj{ //{"version":"1.0.0","ReplyType":"Registration","code": 201}
         private final String version = "1.0.0";
         private final String ReplyType = "Registration";
         private String code;
