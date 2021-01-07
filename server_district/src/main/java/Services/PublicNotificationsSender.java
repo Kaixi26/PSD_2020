@@ -1,34 +1,51 @@
 package Services;
 
 import Auxiliar.DistrictServerConfigurations;
+import Models.Location;
+import com.google.gson.Gson;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
-public class PublicNotificationsSender extends Thread {
-    private ZContext context;
-    private final String PUB_IP;
-    private final int PUB_Port;
+import java.util.concurrent.locks.ReentrantLock;
 
-    public PublicNotificationsSender(ZContext context, DistrictServerConfigurations configurations) {
-        this.context = context;
-        this.PUB_IP = configurations.getPublicNotificationsIP();
-        this.PUB_Port = configurations.getPublicNotificationsPort();
+public class PublicNotificationsSender {
+    private ReentrantLock locker;
+    private final String districtName;
+    private Gson gson;
+    private ZMQ.Socket socketPUB;
+
+    public PublicNotificationsSender(DistrictServerConfigurations configurations, Gson gson) {
+        this.locker = new ReentrantLock();
+        this.districtName = configurations.getDistrictName();
+        this.gson = gson;
+
+        final ZContext context = new ZContext();
+        this.socketPUB = context.createSocket(SocketType.PUB);
+        this.socketPUB.bind("tcp://" + configurations.getPublicNotificationsIP() + ":" + configurations.getPublicNotificationsPort());
     }
 
-    @Override
-    public void run() {
-        try (ZMQ.Socket socketPULL = context.createSocket(SocketType.PULL);
-             ZMQ.Socket socketPUB = context.createSocket(SocketType.PUB)) {
+    public void concentrationIncreaseInLocation(Location location) {
+        this.locker.lock();
+        System.out.println("Public Notifications: Concetration Increase");
+        this.locker.unlock();
+    }
 
-            socketPULL.bind("inproc://notifications_workers");
-            socketPUB.bind("tcp://"+ this.PUB_IP + ":" + this.PUB_Port);
+    public void concentrationDecreaseInLocation(Location location) {
+        this.locker.lock();
+        System.out.println("Public Notifications: Concetration Decrease");
+        this.locker.unlock();
+    }
 
-            while (true) {
-                byte[] notification = socketPULL.recv();
-                System.out.println("Public Notification: " + new String(notification));
-                socketPUB.send(notification);
-            }
-        }
+    public void nobodyInLocation(Location location) {
+        this.locker.lock();
+        System.out.println("Public Notifications: Nobody");
+        this.locker.unlock();
+    }
+
+    public void infectionsIncrease() {
+        this.locker.lock();
+        System.out.println("Public Notifications: Infections");
+        this.locker.unlock();
     }
 }
