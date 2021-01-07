@@ -1,9 +1,10 @@
 package Business;
 
 import Models.Location;
+import Services.ServiceBiResult;
 import Services.ServiceResult;
 import org.jetbrains.annotations.NotNull;
-import org.zeromq.ZContext;
+import org.springframework.core.io.FileSystemResource;
 
 import java.util.Set;
 
@@ -11,42 +12,63 @@ public class DistrictMapManager {
     private final int dimension;
     private DistrictMapCellManager[][] map;
 
-    public DistrictMapManager(ZContext context, String name, int dimension) {
+    public DistrictMapManager(int dimension) {
         this.dimension = dimension;
         this.map = new DistrictMapCellManager[this.dimension][this.dimension];
 
         for(int i = 0 ; i < this.dimension ; i++){
             for(int j = 0 ; j < this.dimension ; j++){
-                this.map[i][j] = new DistrictMapCellManager(context, name, new Location(i,j));
+                this.map[i][j] = new DistrictMapCellManager();
             }
         }
     }
 
-    public ServiceResult<Set<String>> moveClientToLocation(@NotNull String username, Location source, @NotNull Location destination) {
+    public ServiceBiResult moveClientToLocation(@NotNull String username, Location source, @NotNull Location destination) {
         boolean success = false;
+        boolean sourceIsEmpty = false;
         Set<String> clientsInLocation = null;
 
         if(destination.getLatitude() < this.dimension && destination.getLongitude() < this.dimension) {
             success = true;
             if(source != null) {
-                this.map[source.getLatitude()][source.getLongitude()].removeClient(username);
+                DistrictMapCellManager sourceDistrictCell = this.map[source.getLatitude()][source.getLongitude()];
+
+                sourceDistrictCell.lockMapCell();
+                sourceDistrictCell.removeClient(username);
+                sourceIsEmpty = sourceDistrictCell.isEmpty();
+                sourceDistrictCell.unlockMapCell();
             }
-            clientsInLocation = this.map[destination.getLatitude()][source.getLongitude()].addClient(username);
+
+            DistrictMapCellManager destinationDistrictCell = this.map[destination.getLatitude()][destination.getLongitude()];
+            destinationDistrictCell.lockMapCell();
+            destinationDistrictCell.addClient(username);
+            clientsInLocation = destinationDistrictCell.getClientsPresent();
+            destinationDistrictCell.unlockMapCell();
         }
-        return new ServiceResult<>(success,clientsInLocation);
+
+        return new ServiceBiResult<>(success, sourceIsEmpty, clientsInLocation);
     }
 
     public ServiceResult<Integer> getNumberOfClientsInLocation(@NotNull Location location) {
         boolean success = false;
         int clientsNumberInLocation = 0;
+
         if(location.getLatitude() < this.dimension && location.getLongitude() < this.dimension) {
             success = true;
-            clientsNumberInLocation = this.map[location.getLatitude()][location.getLongitude()].getNumberOfClientsPresent();
+            DistrictMapCellManager districtCell = this.map[location.getLatitude()][location.getLongitude()];
+
+            districtCell.lockMapCell();
+            clientsNumberInLocation = districtCell.getNumberOfClientsPresent();
+            districtCell.unlockMapCell();
         }
         return new ServiceResult<>(success, clientsNumberInLocation);
     }
 
     public void removeClientFromMap(@NotNull String username, @NotNull Location actualLocation) {
-        this.map[actualLocation.getLatitude()][actualLocation.getLongitude()].removeClient(username);
+        DistrictMapCellManager districtCell = this.map[actualLocation.getLatitude()][actualLocation.getLongitude()];
+
+        districtCell.lockMapCell();
+        districtCell.removeClient(username);
+        districtCell.unlockMapCell();
     }
 }

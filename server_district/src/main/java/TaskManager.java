@@ -1,4 +1,3 @@
-import Auxiliar.DistrictServerConfigurations;
 import Auxiliar.FrontendConnection;
 import Business.MasterManager;
 import Models.CommunicationProtocols.Requests.NotifyInfectionRequest;
@@ -6,59 +5,56 @@ import Models.CommunicationProtocols.Requests.NotifyLocationRequest;
 import Models.CommunicationProtocols.Requests.ProbeLocationRequest;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.zeromq.ZContext;
-
-import java.io.IOException;
 
 public class TaskManager extends Thread {
-    private Gson gson;
     private FrontendConnection frontendConnection;
-    private  DistrictServerConfigurations configurations;
     private MasterManager manager;
+    private Gson gson;
+    private String jsonRequest;
 
-    public TaskManager(Gson gson, FrontendConnection frontendConnection, DistrictServerConfigurations configurations, ZContext context) {
-        this.gson = gson;
+    public TaskManager(FrontendConnection frontendConnection, MasterManager manager, Gson gson, String jsonRequest) {
         this.frontendConnection = frontendConnection;
-        this.configurations = configurations;
-        this.manager = new MasterManager(context, configurations.getDistrictName(), this.configurations.getDistrictDimension());
+        this.manager = manager;
+        this.gson = gson;
+        this.jsonRequest = jsonRequest;
     }
 
     @Override
-    public void run(){
-        String jsonRequest, jsonResponse, requestType;
+    public void run() {
         Object requestModel, responseModel = null;
-        JsonObject jObj;
+        JsonObject jObj = this.gson.fromJson(jsonRequest, JsonObject.class);
+        String requestType = jObj.get("RequestType").getAsString();
+
+        switch (requestType){
+            case "NotifyLocation":
+                System.out.println("Task Manager: NotifyLocation");
+                requestModel = this.gson.fromJson(jsonRequest, NotifyLocationRequest.class);
+                responseModel = this.manager.moveClientToLocation((NotifyLocationRequest) requestModel);
+                break;
+
+            case "ProbeLocation":
+                System.out.println("Task Manager: ProbeLocation");
+                requestModel = this.gson.fromJson(jsonRequest, ProbeLocationRequest.class);
+                responseModel = this.manager.getNumberOfClientsInLocation((ProbeLocationRequest) requestModel);
+                break;
+
+            case "NotifyInfection":
+                System.out.println("Task Manager: NotifyLocation");
+                requestModel = this.gson.fromJson(jsonRequest, NotifyInfectionRequest.class);
+                responseModel = this.manager.clientInfected((NotifyInfectionRequest) requestModel);
+                break;
+
+            default:
+                System.out.println("Internal Server Error: The request type is invalid");
+                break;
+        }
+
+        String jsonResponse = this.gson.toJson(responseModel);
+        this.frontendConnection.writeLine(jsonResponse);
 
         try {
-            while ((jsonRequest = this.frontendConnection.readLine()) != null) {
-
-                jObj = this.gson.fromJson(jsonRequest, JsonObject.class);
-                requestType = jObj.get("RequestType").getAsString();
-
-                switch (requestType){
-                    case "NotifyInfection":
-                        requestModel = this.gson.fromJson(jsonRequest, NotifyInfectionRequest.class);
-                        responseModel = this.manager.clientInfected((NotifyInfectionRequest) requestModel);
-                        break;
-
-                    case "NotifyLocation":
-                        requestModel = this.gson.fromJson(jsonRequest, NotifyLocationRequest.class);
-                        responseModel = this.manager.moveClientToLocation((NotifyLocationRequest) requestModel);
-                        break;
-
-                    case "ProbeLocation":
-                        requestModel = this.gson.fromJson(jsonRequest, ProbeLocationRequest.class);
-                        responseModel = this.manager.getNumberOfClientsInLocation((ProbeLocationRequest) requestModel);
-                        break;
-                    default:
-                        System.out.println("Internal Server Error: The request type is invalid");
-                        break;
-                }
-                jsonResponse = this.gson.toJson(responseModel);
-                this.frontendConnection.writeLine(jsonResponse);
-            }
-        } catch (IOException e) {
-            System.out.println("Internal Server Error : Something Went Wrong");
+            Thread.currentThread().join();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }

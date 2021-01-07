@@ -1,17 +1,14 @@
 import Auxiliar.DistrictServerConfigurations;
 import Auxiliar.FrontendConnection;
+import Business.MasterManager;
 import Models.CommunicationProtocols.Requests.AnnounceDistrictServerRequest;
 import Models.CommunicationProtocols.Responses.AnnounceDistrictServerResponse;
 import Services.PublicNotificationsSender;
 import com.google.gson.Gson;
-import org.springframework.core.io.FileSystemResource;
-import org.zeromq.ZContext;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.Socket;
 import java.util.Properties;
 
 public class Main {
@@ -52,7 +49,9 @@ public class Main {
         System.out.println("District Name: " + districtName);
 
         DistrictServerConfigurations configurations = loadConfigurationsFile(districtName.toLowerCase());
-        AnnounceDistrictServerRequest announceDistrictServerRequest = new AnnounceDistrictServerRequest(districtName, configurations.getDistrictServerIP(), configurations.getDistrictServerPort(), configurations.getPublicNotificationsIP(), configurations.getPublicNotificationsPort());
+        AnnounceDistrictServerRequest announceDistrictServerRequest = new AnnounceDistrictServerRequest(districtName, configurations.getDistrictServerIP(),
+                                                                            configurations.getDistrictServerPort(), configurations.getPublicNotificationsIP(),
+                                                                            configurations.getPublicNotificationsPort());
 
         Gson gson = new Gson();
         FrontendConnection frontendConnection = new FrontendConnection(configurations);
@@ -64,13 +63,15 @@ public class Main {
 
             if (announceResponse.getStatusCode() >= 200 && announceResponse.getStatusCode() < 300) {
                 System.out.println("Connection Accepted");
-                final ZContext context = new ZContext();
-                new PublicNotificationsSender(context, configurations).start();
-                new TaskManager(gson, frontendConnection, configurations, context).start();
+                break;
             } else {
                 System.out.println("Connection Refused");
                 System.exit(1);
             }
         }
+
+        PublicNotificationsSender notificationsSender = new PublicNotificationsSender(configurations, gson);
+        MasterManager manager = new MasterManager(configurations, notificationsSender);
+        new FrontendReader(frontendConnection, manager, gson).start();
     }
 }
