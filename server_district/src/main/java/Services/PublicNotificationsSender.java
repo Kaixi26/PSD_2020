@@ -27,7 +27,7 @@ public class PublicNotificationsSender {
 
         final ZContext context = new ZContext();
         this.socketPUB = context.createSocket(SocketType.PUB);
-        this.socketPUB.bind("tcp://" + configurations.getPublicNotificationsIP() + ":" + configurations.getPublicNotificationsPort());
+        this.socketPUB.connect("tcp://" + configurations.getPublicNotificationsIP() + ":" + configurations.getPublicNotificationsPort());
     }
 
     public void concentrationIncreaseInLocation(@NotNull Location location) {

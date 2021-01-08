@@ -21,16 +21,21 @@ public class Main {
         InputStream input = new FileInputStream("src/main/resources/config.properties");
         Properties prop = new Properties();
         prop.load(input);
+
         String frontend_ip = prop.getProperty("Server.frontend.ip");
         int frontend_port = Integer.parseInt(prop.getProperty("Server.frontend.port"));
+
         String directory_ip = prop.getProperty("Directory.ip");
         int directory_port = Integer.parseInt(prop.getProperty("Directory.port"));
+
+        String public_notifications_ip = prop.getProperty("Public_notifications.ip");
+        int public_notifications_port = Integer.parseInt(prop.getProperty("Public_notifications.port"));
+
         int district_dimension = Integer.parseInt(prop.getProperty("District.dimension." + districtName.toLowerCase()));
-        String server_district_ip = prop.getProperty("District.server_ip." + districtName.toLowerCase());
-        int server_district_port = Integer.parseInt(prop.getProperty("District.server_port." + districtName.toLowerCase()));
-        String public_notifications_ip = prop.getProperty("District.public_notifications_ip." + districtName.toLowerCase());
-        int public_notifications_port = Integer.parseInt(prop.getProperty("District.public_notifications_port." + districtName.toLowerCase()));
-        return new DistrictServerConfigurations(districtName, frontend_ip, frontend_port, directory_ip, directory_port, district_dimension, server_district_ip, server_district_port, public_notifications_ip, public_notifications_port);
+        String server_district_ip = prop.getProperty("Server.district.ip." + districtName.toLowerCase());
+        int server_district_port = Integer.parseInt(prop.getProperty("Server.district.port." + districtName.toLowerCase()));
+
+        return new DistrictServerConfigurations(districtName, frontend_ip, frontend_port, directory_ip, directory_port, public_notifications_ip, public_notifications_port, district_dimension, server_district_ip, server_district_port);
     }
 
 
@@ -50,8 +55,7 @@ public class Main {
 
         DistrictServerConfigurations configurations = loadConfigurationsFile(districtName);
         AnnounceDistrictServerRequest announceDistrictServerRequest = new AnnounceDistrictServerRequest(districtName, configurations.getDistrictServerIP(),
-                                                                            configurations.getDistrictServerPort(), configurations.getPublicNotificationsIP(),
-                                                                            configurations.getPublicNotificationsPort());
+                                                                            configurations.getDistrictServerPort());
 
         Gson gson = new Gson();
         FrontendConnection frontendConnection = new FrontendConnection(configurations);
