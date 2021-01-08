@@ -51,7 +51,9 @@ public class MasterManager {
         this.clientsLocationManager.putClientLocation(requestModel.getUsername(), requestModel.getLocation());
         this.clientsContactsManager.addContact(result.getAdditionalResult());
 
-        this.notificationsSender.concentrationDecreaseInLocation(source);
+        if(source != null) {
+            this.notificationsSender.concentrationDecreaseInLocation(source);
+        }
         this.notificationsSender.concentrationIncreaseInLocation(requestModel.getLocation());
 
         if(result.getResult()) {
