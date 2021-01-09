@@ -76,7 +76,7 @@ public class DistrictMapManager {
         return new ServiceResult<>(success, clientsNumberInLocation);
     }
 
-    public void removeClientFromMap(@NotNull String username, @NotNull Location actualLocation) {
+    public boolean removeClientFromMap(@NotNull String username, @NotNull Location actualLocation) {
         Tuple<ReentrantLock,DistrictMapCellManager> districtCell = this.map[actualLocation.getLatitude()][actualLocation.getLongitude()];
 
         ReentrantLock cellLocker = districtCell.getFirst();
@@ -84,6 +84,9 @@ public class DistrictMapManager {
 
         cellLocker.lock();
         cellManager.removeClient(username);
+        boolean locationIsEmpty = cellManager.isEmpty();
         cellLocker.unlock();
+
+        return locationIsEmpty;
     }
 }
