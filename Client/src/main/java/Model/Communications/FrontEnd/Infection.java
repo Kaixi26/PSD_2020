@@ -1,8 +1,7 @@
-package Model.Communications;
+package Model.Communications.FrontEnd;
 
 import com.google.gson.Gson;
 
-import java.net.Socket;
 import java.util.List;
 
 public class Infection {

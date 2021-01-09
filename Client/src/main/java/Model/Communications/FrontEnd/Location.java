@@ -1,8 +1,6 @@
-package Model.Communications;
+package Model.Communications.FrontEnd;
 
 import com.google.gson.Gson;
-
-import java.net.Socket;
 
 public class Location {
     private Gson gson;

@@ -1,10 +1,8 @@
-package Model.Communications;
+package Model.Communications.FrontEnd;
 
 //Classe responsável por gerar e enviar um pedido de registo
 
 import com.google.gson.Gson;
-
-import java.net.Socket;
 
 public class Registration {
 

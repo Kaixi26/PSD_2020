@@ -1,4 +1,4 @@
-package Model.Communications;
+package Model.Communications.FrontEnd;
 
 import java.io.*;
 import java.net.Socket;
