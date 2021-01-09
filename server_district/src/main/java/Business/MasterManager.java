@@ -83,10 +83,15 @@ public class MasterManager {
         Set<String> contacts = this.clientsContactsManager.getAllContacts(requestModel.getUsername());
         Location actualLocation = this.clientsLocationManager.getClientLocation(requestModel.getUsername());
 
-        this.districtMapManager.removeClientFromMap(requestModel.getUsername(), actualLocation);
+
+        boolean cellIsEmpty = this.districtMapManager.removeClientFromMap(requestModel.getUsername(), actualLocation);
         this.clientsContactsManager.removeClient(requestModel.getUsername());
         this.clientsLocationManager.removeClientLocation(requestModel.getUsername());
 
+        if(cellIsEmpty) {
+            this.notificationsSender.nobodyInLocation(actualLocation);
+        }
+        this.notificationsSender.concentrationDecreaseInLocation(actualLocation);
         this.notificationsSender.infectionsIncrease();
 
         return new NotifyInfectionResponse(HttpStatus.OK.value(), contacts);
