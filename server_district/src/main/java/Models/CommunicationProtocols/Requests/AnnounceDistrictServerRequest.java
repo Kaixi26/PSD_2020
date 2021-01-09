@@ -13,19 +13,11 @@ public class  AnnounceDistrictServerRequest extends RequestProtocol {
     @SerializedName("server_port")
     private final int ServerPort;
 
-    @SerializedName("pub_notifications_ip")
-    private final String PUBNotificationsIP;
 
-    @SerializedName("pub_notifications_port")
-    private final int PUBNotificationsPort;
-
-
-    public AnnounceDistrictServerRequest(String districtName, String serverIP, int serverPort, String pubNotificationsIP, int pubNotificationsPort) {
+    public AnnounceDistrictServerRequest(String districtName, String serverIP, int serverPort) {
         super(CommunicationType.AnnounceDistrictServer);
         this.DistrictName = districtName;
         this.ServerIP = serverIP;
         this.ServerPort = serverPort;
-        this.PUBNotificationsIP = pubNotificationsIP;
-        this.PUBNotificationsPort = pubNotificationsPort;
     }
 }
