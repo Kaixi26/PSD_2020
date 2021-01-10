@@ -2,7 +2,7 @@
 -export([start_server/0, start_server/1, decode_request/1, intercalate/2]).
 -import(mochijson, [decode/1, encode/1]).
 -record(request, {map = #{}}).
--record(state, {distManager, authManager, sock, logged = false}).
+-record(state, {distManager, authManager, cliManager, sock, logged = false}).
 
 % decode_request(#request, Key-Value Pairs) -> #request
 request_from_decoded(Acc, []) ->
@@ -32,18 +32,20 @@ start_server(Port) ->
   
   AuthManager = auth_manager:create(),
   DistManager = district_manager:create(),
-  MainLoop = spawn(fun() -> main_loop({DistManager, AuthManager, SSock}) end),
+  CliManager = client_manager:create(),
+  MainLoop = spawn(fun() -> main_loop({DistManager, AuthManager, CliManager, SSock}) end),
   {ok, {MainLoop}}.
 
-main_loop({DistManager, AuthManager, SSock}) ->
+main_loop({DistManager, AuthManager, CliManager, SSock}) ->
     {ok, Sock} = gen_tcp:accept(SSock),
     io:format("accepted connection.~n"),
     Pid = spawn(fun() -> serve_connection(#state
                                       { distManager = DistManager
                                       , authManager = AuthManager
+                                      , cliManager = CliManager
                                       , sock = Sock}) end),
     gen_tcp:controlling_process(Sock, Pid),
-    main_loop({DistManager, AuthManager, SSock}).
+    main_loop({DistManager, AuthManager, CliManager, SSock}).
 
 serve_connection(State) ->
     receive
@@ -59,7 +61,13 @@ serve_connection(State) ->
                     serve_connection(State)
             end;
         {tcp_closed, _} ->
+            if State#state.logged /= false ->
+                    client_manager:rm_logged(State#state.cliManager, State#state.logged)
+            end,
             io:format("Closed.~n");
+        {warn_contact} ->
+            io:fwrite("warning contact~n"),
+            serve_connection(State);
         _ ->
             io:format("invalid message received~n"),
             serve_connection(State)
@@ -90,6 +98,9 @@ serve_connection_request(State, Request) ->
             "ProbeLocation" ->
                 serve_client_request_probeLocation(State, Request);
             "Logout" ->
+                if State#state.logged /= false ->
+                        client_manager:rm_logged(State#state.cliManager, State#state.logged)
+                end,
                 gen_tcp:send(State#state.sock, make_response("Logout", 200)),
                 {updateState, State#state{logged = false}};
             "Subscribe" ->
@@ -131,6 +142,7 @@ serve_client_request_authentication(State, Request) ->
                                   , maps:get("Password", Request#request.map)) of
         ok ->
             gen_tcp:send(State#state.sock, make_response("Authentication", 200)),
+            client_manager:add_logged(State#state.cliManager, maps:get("Name", Request#request.map)),
             {updateState, State#state{logged = maps:get("Name", Request#request.map)}};
         _ ->
             gen_tcp:send(State#state.sock, make_response("Authentication", 403))
@@ -197,10 +209,20 @@ serve_client_request_notifyInfection(State, _Request) ->
             District = auth_manager:account_district(auth_manager:get_account(State#state.authManager, Username)),
             case district_manager:send_await(State#state.distManager, District, list_to_binary(S)) of
                 fail ->
+                    io:fwrite("Fail.~n"),
                     gen_tcp:send(State#state.sock, make_response("NotifyInfection", 404));
                 Response ->
                     io:fwrite("~p~n", [Response]),
-                    gen_tcp:send(State#state.sock, Response)
+                    case decode_request(Response) of
+                        no_parse ->
+                            io:format("No parse.~n");
+                        Request ->
+                            {_, Contacts} = maps:get("contacts", Request#request.map, {array,[]}),
+                            lists:map(fun(Name) ->
+                                              client_manager:add_contact(State#state.cliManager, Name)
+                                      end, Contacts)
+                    end,
+                    gen_tcp:send(State#state.sock, make_response("NotifyInfection", 201))
             end
     end.
 
