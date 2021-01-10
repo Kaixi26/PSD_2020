@@ -147,13 +147,14 @@ serve_client_request_notifyLocation(State, Request) ->
             NoFalse = lists:all(fun(X) -> X =/= false end, [Lat, Long]),
             if
                  NoFalse ->
-                    S = io_lib:format( "{\"username\":\"~p\",\"location\":{\"latitude\":~p,\"longitude\":~p},\"request_type\":\"NotifyLocation\",\"version\":\"1.0.0\"}"
+                    S = io_lib:format( '{"username":~p,"location":{"latitude":~p,"longitude":~p},"RequestType":"NotifyLocation","version":"1.0.0"}~n'
                                      , [ClientName, Lat, Long]),
                     District = auth_manager:account_district(auth_manager:get_account(State#state.authManager, ClientName)),
                     case district_manager:send_await(State#state.distManager, District, list_to_binary(S)) of
                         fail ->
                     gen_tcp:send(State#state.sock, make_response("NotifyLocation", 404));
                         Response ->
+                            io:fwrite("~p~n", [Response]),
                             gen_tcp:send(State#state.sock, Response)
                     end;
                 true ->
@@ -173,13 +174,14 @@ serve_client_request_probeLocation(State, Request) ->
                 true ->
                     gen_tcp:send(State#state.sock, make_response("ProbeLocation", 404));
                 _ ->
-                    S = io_lib:format('{"location":{"latitude":~p,"longitude":~p},"RequestType":"ProbeLocation","version":"1.0.0"}'
+                    S = io_lib:format('{"location":{"latitude":~p,"longitude":~p},"RequestType":"ProbeLocation","version":"1.0.0"}~n'
                                      , [Lat, Long]),
                     District = auth_manager:account_district(auth_manager:get_account(State#state.authManager, Username)),
                     case district_manager:send_await(State#state.distManager, District, list_to_binary(S)) of
                         fail ->
-                    gen_tcp:send(State#state.sock, make_response("NotifyLocation", 404));
+                    gen_tcp:send(State#state.sock, make_response("ProbeLocation", 404));
                         Response ->
+                            io:fwrite("~p~n", [Response]),
                             gen_tcp:send(State#state.sock, Response)
                     end
             end
@@ -190,13 +192,14 @@ serve_client_request_notifyInfection(State, _Request) ->
         false ->
             gen_tcp:send(State#state.sock, make_response("NotifyInfection", 401));
         Username ->
-            S = io_lib:format('{"username":~p,"RequestType":"NotifyInfection","version":"1.0.0"}'
+            S = io_lib:format('{"username":~p,"RequestType":"NotifyInfection","version":"1.0.0"}~n'
                              , [Username]),
             District = auth_manager:account_district(auth_manager:get_account(State#state.authManager, Username)),
             case district_manager:send_await(State#state.distManager, District, list_to_binary(S)) of
                 fail ->
                     gen_tcp:send(State#state.sock, make_response("NotifyInfection", 404));
                 Response ->
+                    io:fwrite("~p~n", [Response]),
                     gen_tcp:send(State#state.sock, Response)
             end
     end.
@@ -298,8 +301,8 @@ serve_server_request_announce(State, Request) ->
     Name = maps:get("districtName", Request#request.map, badkey),
     Ip = maps:get("server_ip", Request#request.map, badkey),
     Port = maps:get("server_port", Request#request.map, badkey),
-    PubIp = maps:get("pub_notifications_ip", Request#request.map, badkey),
-    PubPort = maps:get("pub_notifications_port", Request#request.map, badkey),
+    PubIp = maps:get("pub_notifications_ip", Request#request.map, "0.0.0.0"), %badkey),
+    PubPort = maps:get("pub_notifications_port", Request#request.map, 0), %badkey),
     case lists:any(fun(X) -> X == badkey end, [Name, Ip, Port, PubIp, PubPort]) of
         false ->
             District = district_manager:district_from(Name, Ip, Port, PubIp, PubPort, State#state.sock),
@@ -315,10 +318,10 @@ serve_server_request_announce(State, Request) ->
     end.
 
 make_response(Code) ->
-    list_to_binary(io_lib:format( "{\"version\": \"1.0.0\", \"code\": \"~p\"}", [Code])).
+    list_to_binary(io_lib:format( "{\"version\": \"1.0.0\", \"code\": \"~p\"}~n", [Code])).
 
 make_response(ReqType, Code) ->
-    S = io_lib:format( "{\"version\": \"1.0.0\", \"ReplyType\": ~p, \"code\": \"~p\"}"
+    S = io_lib:format( "{\"version\": \"1.0.0\", \"ReplyType\": ~p, \"code\": \"~p\"}~n"
                      , [ReqType, Code]),
     list_to_binary(S).
 

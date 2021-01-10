@@ -40,10 +40,10 @@ district_manager(State) ->
         {{put_district, Pid}, {District}} ->
             {Result, NewState} = district_manager_put(State, District),
             Pid ! {Result, self()},
-            io:fwrite("~p\n", [NewState#state.districts]),
+            %io:fwrite("~p\n", [NewState#state.districts]),
             district_manager(NewState);
         {{get_district, Pid}, {Name}} ->
-            io:fwrite("~p\n", [State#state.districts]),
+            %io:fwrite("~p\n", [State#state.districts]),
             District = maps:get(Name, State#state.districts, unregistered),
             Pid ! {District, self()},
             district_manager(State);
