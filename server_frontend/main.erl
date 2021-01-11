@@ -61,11 +61,20 @@ serve_connection(State) ->
                     serve_connection(State)
             end;
         {tcp_closed, _} ->
-            if State#state.logged /= false ->
-                    client_manager:rm_logged(State#state.cliManager, State#state.logged)
+            if 
+                State#state.logged /= false ->
+                    client_manager:rm_logged(State#state.cliManager, State#state.logged);
+                true ->
+                    ok
             end,
             io:format("Closed.~n");
         {warn_contact} ->
+            if 
+                State#state.logged /= false ->
+                    gen_tcp:send(State#state.sock, make_response("Notification", 200));
+                true ->
+                    ok
+            end,
             io:fwrite("warning contact~n"),
             serve_connection(State);
         _ ->
@@ -98,8 +107,11 @@ serve_connection_request(State, Request) ->
             "ProbeLocation" ->
                 serve_client_request_probeLocation(State, Request);
             "Logout" ->
-                if State#state.logged /= false ->
-                        client_manager:rm_logged(State#state.cliManager, State#state.logged)
+                if 
+                    State#state.logged /= false ->
+                        client_manager:rm_logged(State#state.cliManager, State#state.logged);
+                    true ->
+                        ok
                 end,
                 gen_tcp:send(State#state.sock, make_response("Logout", 200)),
                 {updateState, State#state{logged = false}};
