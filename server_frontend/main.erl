@@ -244,11 +244,11 @@ serve_client_request_subscribe(State, Request) ->
         false ->
             gen_tcp:send(State#state.sock, make_response("Subscribe", 401));
         Username ->
-            case maps:get("district", Request#request.map, badkey) of
+            case maps:get("NotificationType", Request#request.map, badkey) of
                 badkey ->
                     gen_tcp:send(State#state.sock, make_response("Subscribe", 404));
-                District ->
-                    case auth_manager:add_sub(State#state.authManager, Username, District) of
+                NotificationString ->
+                    case auth_manager:add_sub(State#state.authManager, Username, NotificationString) of
                         ok ->
                             gen_tcp:send(State#state.sock, make_response("Subscribe", 201));
                         _ ->
@@ -262,11 +262,11 @@ serve_client_request_unsubscribe(State, Request) ->
         false ->
             gen_tcp:send(State#state.sock, make_response("Unsubscribe", 401));
         Username ->
-            case maps:get("district", Request#request.map, badkey) of
+            case maps:get("NotificationType", Request#request.map, badkey) of
                 badkey ->
                     gen_tcp:send(State#state.sock, make_response("Unsubscribe", 404));
-                District ->
-                    case auth_manager:rm_sub(State#state.authManager, Username, District) of
+                NotificationString ->
+                    case auth_manager:rm_sub(State#state.authManager, Username, NotificationString) of
                         ok ->
                             gen_tcp:send(State#state.sock, make_response("Unsubscribe", 201));
                         _ ->
@@ -282,22 +282,9 @@ serve_client_request_getSubscriptions(State, _Request) ->
         Username ->
             Subs = auth_manager:account_subscriptions(
                      auth_manager:get_account(State#state.authManager, Username)),
-            IPs = lists:map(
-                    fun(D) ->
-                        case district_manager:get(State#state.distManager, D) of
-                            unregistered -> unregistered;
-                            Dist -> { D
-                                    , district_manager:district_pub_ip(Dist)
-                                    , district_manager:district_pub_port(Dist)}
-                        end
-                    end, Subs),
-            FilteredIPs = lists:filter(fun(X) -> X =/= unregistered end, IPs),
-            StrIPs = intercalate(",", lists:map(
-                       fun({D, IP, Port}) ->
-                               io_lib:format('~p:{"ip":~p,"port":~p}' , [D, IP, Port])
-                       end, FilteredIPs)),
-            Response = list_to_binary(io_lib:format( '{"version": "1.0.0", "ReplyType": "GetSubscriptions", "servers":{~s}}'
-                                                   , [StrIPs])),
+            Str = "[" ++ intercalate(",", lists:map(fun(X) -> io_lib:format('"~s"', [X]) end, Subs)) ++ "]",
+            Response = list_to_binary(io_lib:format( '{"version": "1.0.0", "ReplyType": "GetSubscriptions", "NotificationType": ~s}~n'
+                                                   , [Str])),
             gen_tcp:send(State#state.sock, Response)
     end.
 
@@ -314,12 +301,6 @@ serve_client_request_districtRequest(State, _Request) ->
                         unregistered ->
                             gen_tcp:send(State#state.sock, make_response("DistrictRequest", 404));
                         Dist ->
-                            io:fwrite("cenas\n", []),
-                            io:fwrite("~p\n", [district_manager:district_ip(Dist)]),
-                            io:fwrite("~p\n", [district_manager:district_ip(Dist)]),
-                            io:fwrite("~p\n", [district_manager:district_port(Dist)]),
-                            io:fwrite("~p\n", [district_manager:district_pub_ip(Dist)]),
-                            io:fwrite("~p\n", [district_manager:district_pub_port(Dist)]),
                             Response = list_to_binary(io_lib:format( '{"version": "1.0.0", "ReplyType": "DistrictRequest", "server":{"name":~p, "ip":~p, "port":~p, "pub_ip":~p, "pub_port":~p}}'
                                                                    , [ district_manager:district_name(Dist)
                                                                      , district_manager:district_ip(Dist)

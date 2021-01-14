@@ -89,16 +89,11 @@ auth_manager_add_sub(State, Pid, Username, District) ->
             Pid ! {unregistered, self()},
             auth_manager(State);
         Account ->
-            if 
-                length(Account#account.sub) < 3 ->
-                    NewAccount = Account#account{sub = Account#account.sub ++ [District]},
-                    NewState = State#state{accounts = maps:put(Username, NewAccount, State#state.accounts)},
-                    Pid ! {ok, self()},
-                    auth_manager(NewState);
-                true ->
-                    Pid ! {exceed, self()},
-                    auth_manager(State)
-            end
+            NewAccount = Account#account{sub = Account#account.sub ++ [District]},
+            NewState = State#state{accounts = maps:put(Username, NewAccount, State#state.accounts)},
+            Pid ! {ok, self()},
+            io:fwrite("cona", []),
+            auth_manager(NewState)
     end.
 
 auth_manager_rm_sub(State, Pid, Username, District) ->
