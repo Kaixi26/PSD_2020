@@ -11,107 +11,123 @@ import javax.ws.rs.core.Response;
 @Path("/district")
 @Produces(MediaType.APPLICATION_JSON)
 public class DistrictResource {
-    private Map<String, ArrayList<User>> users = new HashMap<>();
-    private Map<String, ArrayList<User>> infecteds = new HashMap<>();
+    private Map<String, Integer> users = new HashMap<>();
+    private Map<String, Integer> infecteds = new HashMap<>();
+    //private Map<String, Map<Integer, Integer>, List<User>> locations = new HashMap<>();
     private float average_sick_encounter=0;
     private int number_post_encounter=0;
 
     public DistrictResource() {
-        ArrayList<User> users1 = new ArrayList<>();
-        User u1 = new User("teste");
-        User u2 = new User("teste2");
-        User u3 = new User("teste3");
-        User u4 = new User("teste4");
-        User u5 = new User("teste5");
-
-        users1.add(u1);
-        users1.add(u2);
-        users1.add(u3);
-
-        ArrayList<User> users2 = new ArrayList<>();
-        users2.add(u4);
-        users2.add(u5);
-
-        ArrayList<User> users3 = new ArrayList<>();
-        users3.add(u5);
-
-        users.put("Braga",users2);
-        users.put("Viana",users1);
-        users.put("Porto",users1);
-        users.put("Lisboa",users1);
-        users.put("Guima",users1);
-        users.put("Faro",users3);
-
-        infecteds.put("Porto", users2);
-        infecteds.put("Braga", users3);
-        infecteds.put("Viana", users1);
-        infecteds.put("Faro", users1);
-
-
     }
 
-    @GET
-    public ArrayList<User> usersDistrict(@QueryParam("district") Optional<String> district) {
-        if(!district.isPresent()) {
-            ArrayList<User> usersAux = new ArrayList<>();
-            for(ArrayList<User> aux: users.values()){
-                usersAux.addAll(aux);
-            }
-            return usersAux;
-        }
 
-        if(users.get(district.get()) == null)
-            return new ArrayList<>();
-        return users.get(district.get());
-    }
 
     @GET
-    @Path("/number")
-    public int getNumberUsers(@QueryParam("district") Optional<String> district) {
-        if(!district.isPresent()) {
-            ArrayList<User> usersAux = new ArrayList<>();
-            for(ArrayList<User> aux: users.values()){
-                usersAux.addAll(aux);
-            }
-            return usersAux.size();
+    public int usersDistrict(@QueryParam("district") String district) {
+        int n = 0;
+
+        if(users.containsKey(district)) {
+            n = users.get(district);
         }
 
-        if(users.get(district.get()) == null)
-            return new ArrayList<>().size();
-        return users.get(district.get()).size();
+        return n;
     }
 
     @GET
     @Path("/infected")
-    public ArrayList<User> infectedDistrict(@QueryParam("district") Optional<String> district) {
-        if(!district.isPresent()) {
-            ArrayList<User> infectedsAux = new ArrayList<>();
-            for(ArrayList<User> aux: infecteds.values()){
-                infectedsAux.addAll(aux);
-            }
-            return infectedsAux;
+    public int infectedDistrict(@QueryParam("district") String district) {
+        int n = 0;
+
+        if(infecteds.containsKey(district)) {
+            n = infecteds.get(district);
         }
 
-        if(infecteds.get(district.get()) == null)
-            return new ArrayList<>();
-        return infecteds.get(district.get());
+        return n;
     }
+
+
+    @POST
+    @Path("/add/{district}")
+    public Response addUser(@PathParam("district") String district) {
+        synchronized (this) {
+            if(users.containsKey(district)){
+                int number = users.get(district);
+                number ++;
+                users.put(district, number);
+            }
+            else{
+                users.put(district, 1);
+            }
+            return Response.ok().build();
+        }
+    }
+
+
+    @POST
+    @Path("/addInfect/{district}")
+    public Response addInfect(@PathParam("district") String district) {
+        synchronized (this) {
+            if(infecteds.containsKey(district)){
+                int number = infecteds.get(district);
+                number ++;
+                infecteds.put(district, number);
+            }
+            else{
+                infecteds.put(district, 1);
+            }
+            return Response.ok().build();
+        }
+    }
+
 
     @GET
-    @Path("/numberinfected")
-    public int getNumberInfected(@QueryParam("district") Optional<String> district) {
-        if (!district.isPresent()) {
-            ArrayList<User> usersAux = new ArrayList<>();
-            for (ArrayList<User> aux : infecteds.values()) {
-                usersAux.addAll(aux);
+    @Path("/top5")
+    public List<String>getTop5() {
+        Map<String,Double> racio = new HashMap<>();
+        ArrayList<String> top5 = new ArrayList<>();
+        for( String dist : users.keySet()){
+            Double sizeUsers = (double)users.get(dist);
+            if(infecteds.containsKey(dist)){
+                Double sizeInfects = (double)infecteds.get(dist);
+                racio.put(dist,sizeInfects/sizeUsers);
             }
-            return usersAux.size();
+            else {
+                racio.put(dist, (double) 0);
+            }
         }
 
-        if (infecteds.get(district.get()) == null)
-            return new ArrayList<>().size();
-        return infecteds.get(district.get()).size();
+        racio.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .limit(5)
+                .forEachOrdered(x -> top5.add(x.getKey()));
+
+        return top5;
+
     }
+
+
+    @GET
+    @Path("/medioencontrosdoentes")
+    public float getMedioencontrosdoentes() {
+        return average_sick_encounter;
+    }
+
+
+    @POST
+    @Path("/add/encontro/{numero}")
+    public Response addUser(@PathParam("numero") int numero) {
+
+
+        average_sick_encounter = ( average_sick_encounter*number_post_encounter + numero) / (number_post_encounter+1);
+        number_post_encounter++;
+
+        return Response.ok().build();
+
+
+    }
+    /*
+
     @GET
     @Path("/top5peopleatsametime")
     public ArrayList<String> getTop5peopleatsametime() {
@@ -139,96 +155,10 @@ public class DistrictResource {
 
      });
 
-
        return dist;
     }
-    @GET
-    @Path("/medioencontrosdoentes")
-    public float getMedioencontrosdoentes() {
-       return average_sick_encounter;
-    }
 
-
-    @GET
-    @Path("/top5")
-    public ArrayList<String> getTop5() {
-       Map<String,Double> racio = new HashMap<>();
-       ArrayList<String> top5 = new ArrayList<>();
-       for( String dist : users.keySet()){
-           Double sizeUsers = (double)users.get(dist).size();
-           if(infecteds.containsKey(dist)){
-               Double sizeInfects = (double)infecteds.get(dist).size();
-               racio.put(dist,sizeInfects/sizeUsers);
-           }
-           else {
-               racio.put(dist, (double) 0);
-           }
-       }
-
-       racio.entrySet()
-                .stream()
-                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .limit(5)
-                .forEachOrdered(x -> top5.add(x.getKey()));
-
-       return top5;
-
-    }
-
-
-    @POST
-    @Path("/add/encontro/{numero}")
-    public Response addUser(@PathParam("numero") int numero) {
-        
-        
-        average_sick_encounter = ( average_sick_encounter*number_post_encounter + numero) / (number_post_encounter+1);
-        number_post_encounter++;
-
-            return Response.ok().build();
-        
-
-    }
-
-
-    @POST
-    @Path("/add/{district}/{name}")
-    public Response addUser(@PathParam("district") String district,@PathParam("name") String name) {
-        synchronized (this) {
-            if(users.containsKey(district)){
-                ArrayList<User> usersAux = users.get(district);
-                User newUser = new User(name);
-                usersAux.add(newUser);
-                users.put(district, usersAux);
-            }
-            else{
-                ArrayList<User> usersAux = new ArrayList<>();
-                User newUser = new User(name);
-                usersAux.add(newUser);
-                users.put(district, usersAux);
-            }
-            return Response.ok().build();
-        }
-
-    }
-    @POST
-    @Path("/addinfected/{district}/{name}")
-    public Response addInfected(@PathParam("district") String district,@PathParam("name") String name) {
-        synchronized (this) {
-            if(infecteds.containsKey(district)){
-                ArrayList<User> infectedsAux = infecteds.get(district);
-                User newUser = new User(name);
-                infectedsAux.add(newUser);
-                infecteds.put(district, infectedsAux);
-            }
-            else{
-                ArrayList<User> infectedsAux = new ArrayList<>();
-                User newUser = new User(name);
-                infectedsAux.add(newUser);
-                infecteds.put(district, infectedsAux);
-            }
-            return Response.ok().build();
-        }
-    }
+    */
 
 
 }
