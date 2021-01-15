@@ -1,7 +1,8 @@
+helloworld/health/TemplateHealthCheck.class
+helloworld/api/District2.class
+helloworld/api/Saying.class
 helloworld/api/Location.class
 helloworld/resources/HelloWorldResource.class
 helloworld/api/District1.class
 helloworld/api/District.class
-helloworld/health/TemplateHealthCheck.class
 helloworld/resources/LocationResource.class
-helloworld/api/Saying.class

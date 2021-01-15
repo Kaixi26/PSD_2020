@@ -2,6 +2,7 @@ package helloworld.resources;
 
 import helloworld.api.District;
 import helloworld.api.District1;
+import helloworld.api.District2;
 import helloworld.api.Location;
 import helloworld.api.User;
 import org.checkerframework.checker.units.qual.A;
@@ -67,7 +68,7 @@ public class DistrictResource {
     @POST
     @Path("/report")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response addInfected(District1 dist) {
+    public Response addInfected(District2 dist) {
         synchronized (this) {
             if(infecteds.containsKey(dist.name)){
                 int number = infecteds.get(dist.name);
@@ -77,6 +78,9 @@ public class DistrictResource {
             else{
                 infecteds.put(dist.name, 1);
             }
+            average_sick_encounter = ( average_sick_encounter*number_post_encounter + dist.number) / (number_post_encounter+1);
+            number_post_encounter++;
+
             return Response.ok().build();
         }
     }
@@ -147,7 +151,7 @@ public class DistrictResource {
         return average_sick_encounter;
     }
 
-
+/*
     @POST
     @Path("/add/encontro/{numero}")
     public Response addUser(@PathParam("numero") int numero) {
@@ -159,7 +163,7 @@ public class DistrictResource {
         return Response.ok().build();
 
 
-    }
+    }*/
 
 }
 
