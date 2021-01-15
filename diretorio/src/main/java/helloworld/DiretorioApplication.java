@@ -29,8 +29,7 @@ public class DiretorioApplication extends Application<DiretorioConfiguration> {
     @Override
     public void run(final DiretorioConfiguration configuration,
                     final Environment environment) {
-        environment.jersey().register(
-            new HelloWorldResource(configuration.template, configuration.defaultName));
+
         environment.healthChecks().register("template",
             new TemplateHealthCheck(configuration.template));
 

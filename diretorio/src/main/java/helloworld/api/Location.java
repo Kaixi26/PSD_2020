@@ -3,17 +3,17 @@ package helloworld.api;
 public class Location {
     public int latitude;
     public int longitude;
-    public int currentUsers;
+    public int maxUsers;
 
 
-    public Location(int latitude, int longitude, int currentUsers) {
+    public Location(int latitude, int longitude, int maxUsers) {
         this.latitude = latitude;
         this.longitude = longitude;
-        this.currentUsers = currentUsers;
+        this.maxUsers = maxUsers;
     }
 
-    public int getCurrentUsers() {
-        return currentUsers;
+    public int getMaxUsers() {
+        return maxUsers;
     }
 
     public int getLatitude() {
@@ -29,7 +29,7 @@ public class Location {
         return "Location{" +
                 "latitude=" + latitude +
                 ", longitude=" + longitude +
-                ", currentUsers=" + currentUsers +
+                ", maxUsers=" + maxUsers +
                 '}';
     }
 }

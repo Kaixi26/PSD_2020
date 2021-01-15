@@ -14,9 +14,9 @@ public class District {
 
     @JsonCreator
     public District(@JsonProperty("district") String district,@JsonProperty("longitude") int longitude, @JsonProperty("latitude") int latitude,
-                    @JsonProperty("currentUsers") int currentUsers){
+                    @JsonProperty("maxUsers") int maxUsers){
         this.district = district;
-        Location loc = new Location(latitude,longitude,currentUsers);
+        Location loc = new Location(latitude,longitude,maxUsers);
         this.location = loc;
     }
 

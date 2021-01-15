@@ -1,5 +1,8 @@
 package helloworld.resources;
 
+import helloworld.api.District;
+import helloworld.api.District1;
+import helloworld.api.Location;
 import helloworld.api.User;
 import org.checkerframework.checker.units.qual.A;
 
@@ -13,7 +16,6 @@ import javax.ws.rs.core.Response;
 public class DistrictResource {
     private Map<String, Integer> users = new HashMap<>();
     private Map<String, Integer> infecteds = new HashMap<>();
-    //private Map<String, Map<Integer, Integer>, List<User>> locations = new HashMap<>();
     private float average_sick_encounter=0;
     private int number_post_encounter=0;
 
@@ -45,7 +47,40 @@ public class DistrictResource {
         return n;
     }
 
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response add(District1 dist) {
+        synchronized (this) {
+            if(users.containsKey(dist.name)){
+                int number = users.get(dist.name);
+                number ++;
+                users.put(dist.name, number);
+            }
+            else{
+                users.put(dist.name, 1);
+            }
+            return Response.ok().build();
+        }
+    }
 
+
+    @POST
+    @Path("/report")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response addInfected(District1 dist) {
+        synchronized (this) {
+            if(infecteds.containsKey(dist.name)){
+                int number = infecteds.get(dist.name);
+                number ++;
+                infecteds.put(dist.name, number);
+            }
+            else{
+                infecteds.put(dist.name, 1);
+            }
+            return Response.ok().build();
+        }
+    }
+    /*
     @POST
     @Path("/add/{district}")
     public Response addUser(@PathParam("district") String district) {
@@ -78,7 +113,7 @@ public class DistrictResource {
             return Response.ok().build();
         }
     }
-
+    */
 
     @GET
     @Path("/top5")
@@ -106,7 +141,6 @@ public class DistrictResource {
 
     }
 
-
     @GET
     @Path("/medioencontrosdoentes")
     public float getMedioencontrosdoentes() {
@@ -126,40 +160,6 @@ public class DistrictResource {
 
 
     }
-    /*
-
-    @GET
-    @Path("/top5peopleatsametime")
-    public ArrayList<String> getTop5peopleatsametime() {
-        ArrayList<String> dist = new ArrayList<>();
-        ArrayList<Integer> size = new ArrayList<>();
-
-     users.forEach((key, tab) -> {
-
-
-        int min =tab.size();
-        if( size.size()<5){
-            size.add(min);
-            dist.add(key);
-        }
-        else{
-            int minimo= Collections.min(size);
-            if (minimo< min){
-                int index = size.indexOf(minimo);
-                size.remove(index);
-                dist.remove(index);
-                size.add(min);
-                dist.add(key);
-            }
-        }
-
-     });
-
-       return dist;
-    }
-
-    */
-
 
 }
 

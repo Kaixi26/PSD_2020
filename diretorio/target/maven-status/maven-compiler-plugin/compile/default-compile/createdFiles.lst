@@ -1,5 +1,6 @@
 helloworld/api/Location.class
 helloworld/resources/HelloWorldResource.class
+helloworld/api/District1.class
 helloworld/api/District.class
 helloworld/health/TemplateHealthCheck.class
 helloworld/resources/LocationResource.class

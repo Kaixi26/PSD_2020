@@ -25,8 +25,7 @@ public class LocationResource {
     public List<Location> top5Locations(@QueryParam("district") String district) {
         List<Location> top5 = locations.get(district);
 
-        return top5.stream().limit(5).sorted(Comparator.comparing(Location::getCurrentUsers).reversed()).collect(Collectors.toList());
-
+        return top5.stream().sorted(Comparator.comparing(Location::getMaxUsers).reversed()).limit(5).collect(Collectors.toList());
     }
 
     @POST
@@ -35,39 +34,27 @@ public class LocationResource {
         synchronized (this) {
             System.out.println("Nova Entrada");
 
-            Location loc = new Location(dist.location.latitude, dist.location.longitude, dist.location.currentUsers);
+            Location loc = new Location(dist.location.latitude, dist.location.longitude, dist.location.maxUsers);
 
-            if (locations.containsKey(dist.district)) {
+            List<Location> locList = locations.getOrDefault(dist.district, new ArrayList<>());
 
-                List<Location> l2 = locations.get(dist.district);
-
-                for(Location l : l2) {
-                    if (l.latitude == loc.getLatitude() && l.longitude == loc.getLongitude()) {
-                        if (l.getCurrentUsers() <= loc.getCurrentUsers()) {
-                            l.currentUsers = dist.location.currentUsers;
-                            System.out.println("ADICIONEI DE NOVO");
-                            System.out.println(l2.toString());
-                        }
-                    } else {
-                        l2.add(loc);
-                        locations.put(dist.district, l2);
-                        System.out.println("ADICIONEI SO A LOCALIZAÇAO");
-                        System.out.println(l2.toString());
+            int i;
+            for(i=0; i<locList.size(); i++)
+                if(locList.get(i).latitude == loc.latitude && locList.get(i).longitude == loc.longitude) {
+                    if (locList.get(i).getMaxUsers() <= loc.getMaxUsers()) {
+                        locList.remove(i);
+                        locList.add(loc);
                     }
+                    break;
                 }
+            if(i == locList.size())
+                locList.add(loc);
 
-            }
-            else {
-                List<Location> l1 = new ArrayList<>();
-                l1.add(loc);
-                locations.put(dist.district, l1);
-                System.out.println("ADICIONEI TUDO");
-                System.out.println(l1.toString());
+            //System.out.println(locList.toString());
+            locations.put(dist.district, locList);
 
-            }
-            System.out.println(locations.keySet());
+            //System.out.println(locations.keySet());
             return Response.ok().build();
         }
     }
-
 }
