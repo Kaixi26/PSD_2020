@@ -81,6 +81,18 @@ public class View {
         return r;
     }
 
+    public void showErrorLogin(){
+        System.out.println("Error in login");
+    }
+
+    public void showErrorRegister(){
+        System.out.println("Error in register");
+    }
+
+    public void showSuccessRegister(){
+        System.out.println("Register successful");
+    }
+
     public void showMainHelp(){
         System.out.println(
                 "commands available:\n" +

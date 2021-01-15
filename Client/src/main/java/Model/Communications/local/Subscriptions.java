@@ -1,7 +1,4 @@
-package local;
-
-import Model.Communications.FrontEnd.DistrictLimitException;
-import local.SubscriptionObj;
+package Model.Communications.local;
 
 import java.util.*;
 

@@ -3,15 +3,13 @@ package Controller;
 import Model.Communications.Communication;
 import View.View;
 import View.LoggedControllerView;
+import Model.Communications.local.DistrictLimitException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import static java.lang.Thread.*;
 
 public class LoggedController {
 
@@ -86,52 +84,53 @@ public class LoggedController {
                     case "subscriptions":
                         System.out.println(model.getSubscriptions());
                         break;
-                    case "n":
-                        model.receiveNotification();
-                        break;
                     case "subscribe":
                         if(input.length <= 1)
                             mainview.showInvalidInput();
-                        switch (input[1].toLowerCase()){
-                            case "nobodyin":
-                                if(input.length != 5) {
+                        try{
+                            switch (input[1].toLowerCase()){
+                                case "nobodyin":
+                                    if(input.length != 5) {
+                                        mainview.showInvalidInput();
+                                        break;
+                                    }
+                                    else {
+                                        view.showSubscribeView(model.subNobodyInLocation(input[2], Integer.parseInt(input[3]), Integer.parseInt(input[4])));
+                                    }
+                                    break;
+                                case "concentrationincin":
+                                    if(input.length != 5) {
+                                        mainview.showInvalidInput();
+                                        break;
+                                    }
+                                    else {
+                                        view.showSubscribeView(model.subConcentrationInc(input[2], Integer.parseInt(input[3]), Integer.parseInt(input[4])));
+                                    }
+                                    break;
+                                case "concentrationdecin":
+                                    if(input.length != 5) {
+                                        mainview.showInvalidInput();
+                                        break;
+                                    }
+                                    else {
+                                        view.showSubscribeView(model.subConcentrationDec(input[2], Integer.parseInt(input[3]), Integer.parseInt(input[4])));
+                                    }
+                                    break;
+                                case "anotherinfectedin":
+                                    if(input.length != 3) {
+                                        mainview.showInvalidInput();
+                                        break;
+                                    }
+                                    else {
+                                        view.showSubscribeView(model.subInfectionsIncrease(input[2]));
+                                    }
+                                    break;
+                                default:
                                     mainview.showInvalidInput();
                                     break;
-                                }
-                                else {
-                                    view.showSubscribeView(model.subNobodyInLocation(input[2], Integer.parseInt(input[3]), Integer.parseInt(input[4])));
-                                }
-                                break;
-                            case "concentrationincin":
-                                if(input.length != 5) {
-                                    mainview.showInvalidInput();
-                                    break;
-                                }
-                                else {
-                                    view.showSubscribeView(model.subConcentrationInc(input[2], Integer.parseInt(input[3]), Integer.parseInt(input[4])));
-                                }
-                                break;
-                            case "concentrationdecin":
-                                if(input.length != 5) {
-                                    mainview.showInvalidInput();
-                                    break;
-                                }
-                                else {
-                                    view.showSubscribeView(model.subConcentrationDec(input[2], Integer.parseInt(input[3]), Integer.parseInt(input[4])));
-                                }
-                                break;
-                            case "anotherinfectedin":
-                                if(input.length != 3) {
-                                    mainview.showInvalidInput();
-                                    break;
-                                }
-                                else {
-                                    view.showSubscribeView(model.subInfectionsIncrease(input[2]));
-                                }
-                                break;
-                            default:
-                                mainview.showInvalidInput();
-                                break;
+                            }
+                        } catch (DistrictLimitException e){
+                            view.showMaxSubscribedDistrictsWarning();
                         }
                         break;
                     case "unsubscribe":
@@ -200,17 +199,14 @@ public class LoggedController {
         }
     }
 
-    public class InContactReceiver implements Runnable { //TODO try to put this inside the model
+    public class InContactReceiver implements Runnable {
         @Override
         public void run() {
             try{
                 //noinspection InfiniteLoopStatement
-                System.out.println("Alive");
-                while(!Thread.interrupted()){
-                    if (model.contact() && !Thread.interrupted())
-                        System.out.println("Contacto com covid"); //TODO view for this
+                while(!Thread.interrupted() && model.contact()){
+                    view.showContactWarning();
                 }
-                System.out.println("WILL DIE");
                 throw new InterruptedException();
             } catch (InterruptedException e){
                 //Do nothing (let thread die)
@@ -224,15 +220,12 @@ public class LoggedController {
             try{
                 String not;
                 //noinspection InfiniteLoopStatement
-                System.out.println("Alive");
                 while(!Thread.interrupted() && (not = model.receiveNotification()) != null){
-                    System.out.println("Notificação: " + not);//TODO view for this
+                    System.out.println("Notificação: " + not); //TODO view for this
                 }
-                System.out.println("WILL DIE");
                 throw new InterruptedException();
             } catch (InterruptedException e){
                 //Do nothing (let thread die)
-                System.out.println("DEAD");
             }
         }
     }

@@ -2,8 +2,9 @@ package Model.Communications;
 
 import Model.Communications.DistrictServers.Subscriber;
 import Model.Communications.FrontEnd.*;
-import local.SubscriptionObj;
-import local.Subscriptions;
+import Model.Communications.local.DistrictLimitException;
+import Model.Communications.local.SubscriptionObj;
+import Model.Communications.local.Subscriptions;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -100,7 +101,7 @@ public class Communication {
     }
 
     //Método que subscreve a notificação de aumento da concentração de pessoas numa localização de um certo distrito
-    public boolean subConcentrationInc(String district, int lat, int lon) throws DistrictLimitException{
+    public boolean subConcentrationInc(String district, int lat, int lon) throws DistrictLimitException {
         if(sub.subConcentrationInc(district,lat,lon)){
             this.addSubscription(new SubscriptionObj(district,"ConcentrationIncreaseInLocation",lat,lon));
             Subscription s = new Subscription(com);

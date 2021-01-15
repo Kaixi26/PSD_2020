@@ -1,7 +1,6 @@
 package Model.Communications.FrontEnd;
 
 import com.google.gson.Gson;
-import local.SubscriptionObj;
 
 import java.util.List;
 

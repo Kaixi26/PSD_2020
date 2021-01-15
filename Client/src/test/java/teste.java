@@ -1,6 +1,4 @@
-import Model.Communications.Communication;
-import Model.Communications.DistrictServers.Subscriber;
-import local.Subscriptions;
+import Model.Communications.local.Subscriptions;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;

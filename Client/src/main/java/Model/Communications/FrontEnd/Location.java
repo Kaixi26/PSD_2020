@@ -27,7 +27,7 @@ public class Location {
     public boolean receiveNotifyLocationRes(){
         String json = com.receiveResponse();
         NotifyLocationResObj res = gson.fromJson(json, NotifyLocationResObj.class);
-        return res.code.equals("200"); //TODO TEST + code
+        return res.code.equals("200");
     }
 
     //Método que espera pela resposta do servidor front-end aṕos ser feito o pedido de NotifyLocation
@@ -37,7 +37,7 @@ public class Location {
         if(res.code.equals("200"))
             return res.clientsNumber;
         else
-            return -1; //TODO TEST + code
+            return -1;
     }
 
     //Objeto que representa um pedido de NotifyLocation

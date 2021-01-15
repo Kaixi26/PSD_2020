@@ -1,4 +1,4 @@
-package local;
+package Model.Communications.local;
 
 
 import java.util.Objects;

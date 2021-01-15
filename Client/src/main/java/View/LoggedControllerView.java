@@ -68,7 +68,12 @@ public class LoggedControllerView {
             System.out.println("Error, something went wrong, please try again");
     }
 
-    public void showMaxSubscribedDistricts(){
+    public void showMaxSubscribedDistrictsWarning(){
         System.out.println("You have reached the maximum number of subscriptions to different districts (3)");
     }
+
+    public void showContactWarning(){
+        System.out.println("You have been in close contact with a person that had the virus");
+    }
+
 }

@@ -38,9 +38,8 @@ public class Controller {
                     view.showLogin();
                     String username = view.getUsername();
                     if (!model.authenticate(username, view.getPassword()))
-                        System.out.println("Error in login"); //TODO view for this
+                        view.showErrorLogin();
                     else {
-                        System.out.println("Login successful"); //TODO view for this
                         new LoggedController(model,view,username).init();
                     }
                     break;
@@ -52,8 +51,8 @@ public class Controller {
                     Runtime.getRuntime().exec("clear");
                     view.showRegister();
                     if(!model.register(view.getUsername(), view.getPassword(), view.getDomicile()))
-                        System.out.println("Error in register"); //TODO view for this
-                    else System.out.println("Register successful"); //TODO view for this
+                        view.showErrorRegister();
+                    else view.showSuccessRegister();
                     break;
                 case "help":
                     if(input.length > 1) {
