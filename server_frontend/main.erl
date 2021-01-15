@@ -244,7 +244,7 @@ serve_client_request_subscribe(State, Request) ->
         false ->
             gen_tcp:send(State#state.sock, make_response("Subscribe", 401));
         Username ->
-            case maps:get("NotificationType", Request#request.map, badkey) of
+            case maps:get("SubscriptionType", Request#request.map, badkey) of
                 badkey ->
                     gen_tcp:send(State#state.sock, make_response("Subscribe", 404));
                 NotificationString ->
@@ -262,7 +262,7 @@ serve_client_request_unsubscribe(State, Request) ->
         false ->
             gen_tcp:send(State#state.sock, make_response("Unsubscribe", 401));
         Username ->
-            case maps:get("NotificationType", Request#request.map, badkey) of
+            case maps:get("SubscriptionType", Request#request.map, badkey) of
                 badkey ->
                     gen_tcp:send(State#state.sock, make_response("Unsubscribe", 404));
                 NotificationString ->
@@ -283,7 +283,7 @@ serve_client_request_getSubscriptions(State, _Request) ->
             Subs = auth_manager:account_subscriptions(
                      auth_manager:get_account(State#state.authManager, Username)),
             Str = "[" ++ intercalate(",", lists:map(fun(X) -> io_lib:format('"~s"', [X]) end, Subs)) ++ "]",
-            Response = list_to_binary(io_lib:format( '{"version": "1.0.0", "ReplyType": "GetSubscriptions", "NotificationType": ~s}~n'
+            Response = list_to_binary(io_lib:format( '{"version": "1.0.0", "ReplyType": "GetSubscriptions", "Subscriptions": ~s}~n'
                                                    , [Str])),
             gen_tcp:send(State#state.sock, Response)
     end.
