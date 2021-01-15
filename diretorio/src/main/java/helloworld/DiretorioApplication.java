@@ -1,6 +1,7 @@
 package helloworld;
 
 import helloworld.resources.DistrictResource;
+import helloworld.resources.LocationResource;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -35,6 +36,10 @@ public class DiretorioApplication extends Application<DiretorioConfiguration> {
 
         environment.jersey().register(
                 new DistrictResource()
+        );
+
+        environment.jersey().register(
+                new LocationResource()
         );
 
     }
