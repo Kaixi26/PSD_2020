@@ -9,7 +9,7 @@ public class Subscriber {
 
     private String ip;
     private String port;
-    private ZMQ.Socket socket;
+    public ZMQ.Socket socket;
 
     public Subscriber(String ip, String port){
         this.ip = ip;
@@ -19,51 +19,52 @@ public class Subscriber {
         socket.connect("tcp://" + ip + ":" + port);
     }
 
-    private boolean subscribe(String s){
-        return socket.subscribe(s);
+    public boolean subscribe(String s){
+        System.out.println("Subscribred to:" + s);
+        return socket.subscribe(s.getBytes());
     }
 
     //Método que subscreve a notificação de aumento da concentração de pessoas numa localização de um certo distrito
     public boolean subConcentrationInc(String district, int lat, int lon){
-        String str = district + "(" + lat + "," + lon + ")_ConcentrationIncreaseInLocation ";
-        return socket.subscribe(str);
+        String str = district + "(" + lat + "," + lon + ")_ConcentrationIncreaseInLocation";
+        return this.subscribe(str);
     }
 
     //Método que subscreve a notificação de diminuição da concentração de pessoas numa localização de um certo distrito
     public boolean subConcentrationDec(String district, int lat, int lon){
-        String str = district + "(" + lat + "," + lon + ")_ConcentrationDecreaseInLocation ";
-        return socket.subscribe(str);
+        String str = district + "(" + lat + "," + lon + ")_ConcentrationDecreaseInLocation";
+        return this.subscribe(str);
     }
 
     //Método que subscreve a notificação de quando deixa de haver pessoas numa certa localização de um certo distrito
     public boolean subNobodyInLocation(String district, int lat, int lon) {
-        String str = district + "(" + lat + "," + lon + ")_NobodyInLocation ";
-        return socket.subscribe(str);
+        String str = district + "(" + lat + "," + lon + ")_NobodyInLocation";
+        return this.subscribe(str);
     }
 
     //Método que subscreve a notificação de occorrência de mais um infetado num dado distrito
     public boolean subInfectionsIncrease(String district){
-        String str = district + "_InfectionsIncrease ";
-        return socket.subscribe(str);
+        String str = district + "_InfectionsIncrease";
+        return this.subscribe(str);
     }
 
     public boolean unsubConcentrationInc(String district, int lat, int lon){
-        String str = district + "(" + lat + "," + lon + ")_ConcentrationIncreaseInLocation ";
+        String str = district + "(" + lat + "," + lon + ")_ConcentrationIncreaseInLocation";
         return socket.unsubscribe(str);
     }
 
     public boolean unsubConcentrationDec(String district, int lat, int lon){
-        String str = district + "(" + lat + "," + lon + ")_ConcentrationDecreaseInLocation ";
+        String str = district + "(" + lat + "," + lon + ")_ConcentrationDecreaseInLocation";
         return socket.unsubscribe(str);
     }
 
     public boolean unsubNobodyInLocation(String district, int lat, int lon) {
-        String str = district + "(" + lat + "," + lon + ")_NobodyInLocation ";
+        String str = district + "(" + lat + "," + lon + ")_NobodyInLocation";
         return socket.unsubscribe(str);
     }
 
     public boolean unsubInfectionsIncrease(String district){
-        String str = district + "_InfectionsIncrease ";
+        String str = district + "_InfectionsIncrease";
         return socket.unsubscribe(str);
     }
 

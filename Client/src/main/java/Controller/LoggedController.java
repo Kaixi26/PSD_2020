@@ -2,38 +2,44 @@ package Controller;
 
 import Model.Communications.Communication;
 import View.View;
+import View.LoggedControllerView;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static java.lang.Thread.*;
 
 public class LoggedController {
 
     private Communication model;
-    private View view;
+    private View mainview;
+    private LoggedControllerView view;
+    private String username;
+    private List<String> subs; //List of the districts the user has subscribed, max==3
 
-    public LoggedController(Communication model,View view) throws IOException {
+    public LoggedController(Communication model,View view, String username) throws IOException {
         this.model = model;
-        this.view = view;
+        this.mainview = view;
+        this.view = view.lv;
+        this.username = username;
     }
 
     public void init(){
-        //TODO view init(help)
-        //TODO limitar a 3 distritos em simultaneo
-        //TODO subscribe na front-end para persistencia
+        view.init(username);
+        model.updateSubscriptions();
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
             String[] input;
             boolean alive = true;
 
             Thread contact = new Thread(new InContactReceiver());
-            System.out.println("Created Thread");
             contact.start();
 
             Thread notReceiver = new Thread(new NotificationReceiver());
-            System.out.println("Created Thread");
             notReceiver.start();
 
 
@@ -41,109 +47,151 @@ public class LoggedController {
             while(alive){
                 switch ((input = in.readLine().split(" "))[0]){
                     case "probe":
+                        if(input.length != 3) {
+                            mainview.showInvalidInput();
+                            break;
+                        }
                         int n = model.probe(Integer.parseInt(input[1]),Integer.parseInt(input[2]));
                         if(n != -1)
-                            System.out.println("O número de pessoas infetadas nesta localização é: " + n); //TODO view for this
+                            view.showProbeView(n,true);
                         else
-                            System.out.println("Error retrieving probe request"); //TODO view for this
+                            view.showProbeView(-1,false);
                         break;
                     case "move":
+                        if(input.length != 3 ) {
+                            mainview.showInvalidInput();
+                            break;
+                        }
                         if(!model.position(Integer.parseInt(input[1]),Integer.parseInt(input[2])))
-                            System.out.println("Error, unable to move"); //TODO view for this
-                        else System.out.println("Move successful"); //TODO view for this
+                            view.showMoveView(false);
+                        else  view.showMoveView(true);
                         break;
                     case "sick":
                         Runtime.getRuntime().exec("clear");
+                        if(input.length != 1) {
+                            mainview.showInvalidInput();
+                            break;
+                        }
                         if(!model.sick())
-                            System.out.println("Error, pls try again or call SNS\nDont leave your home"); //TODO view for this
-                        else System.out.println("Dont leave home"); //TODO view for this
+                            view.showSickView(false);
+                        else {
+                            view.showSickView(true);
+                            alive = false;
+                            contact.interrupt();
+                            notReceiver.interrupt();
+                            new Controller().init();
+                            break;
+                        }
+                        break;
+                    case "subscriptions":
+                        System.out.println(model.getSubscriptions());
+                        break;
+                    case "n":
+                        model.receiveNotification();
                         break;
                     case "subscribe":
-                        if(input[1] == null)
-                            view.showInvalidInput();
+                        if(input.length <= 1)
+                            mainview.showInvalidInput();
                         switch (input[1].toLowerCase()){
                             case "nobodyin":
-                                if(input[2] == null || input[3] == null || input[4] == null)
-                                    view.showInvalidInput();
-                                else if(!model.subNobodyInLocation(input[2],Integer.parseInt(input[3]),Integer.parseInt(input[4])))
-                                    System.out.println("Erro ao subscrever");
-                                else System.out.println("Subscrito com sucesso");
+                                if(input.length != 5) {
+                                    mainview.showInvalidInput();
+                                    break;
+                                }
+                                else {
+                                    view.showSubscribeView(model.subNobodyInLocation(input[2], Integer.parseInt(input[3]), Integer.parseInt(input[4])));
+                                }
                                 break;
                             case "concentrationincin":
-                                if(input[2] == null || input[3] == null || input[4] == null)
-                                    view.showInvalidInput();
-                                else if(!model.subConcentrationInc(input[2],Integer.parseInt(input[3]),Integer.parseInt(input[4])))
-                                    System.out.println("Erro ao subscrever");
-                                else System.out.println("Subscrito com sucesso");
+                                if(input.length != 5) {
+                                    mainview.showInvalidInput();
+                                    break;
+                                }
+                                else {
+                                    view.showSubscribeView(model.subConcentrationInc(input[2], Integer.parseInt(input[3]), Integer.parseInt(input[4])));
+                                }
                                 break;
                             case "concentrationdecin":
-                                if(input[2] == null || input[3] == null || input[4] == null)
-                                    view.showInvalidInput();
-                                else if(!model.subConcentrationDec(input[2],Integer.parseInt(input[3]),Integer.parseInt(input[4])))
-                                    System.out.println("Erro ao subscrever");
-                                else System.out.println("Subscrito com sucesso");
+                                if(input.length != 5) {
+                                    mainview.showInvalidInput();
+                                    break;
+                                }
+                                else {
+                                    view.showSubscribeView(model.subConcentrationDec(input[2], Integer.parseInt(input[3]), Integer.parseInt(input[4])));
+                                }
                                 break;
                             case "anotherinfectedin":
-                                if(input[2] == null)
-                                    view.showInvalidInput();
-                                else if(!model.subInfectionsIncrease(input[2]))
-                                    System.out.println("Erro ao subscrever");
-                                else System.out.println("Subscrito com sucesso");
+                                if(input.length != 3) {
+                                    mainview.showInvalidInput();
+                                    break;
+                                }
+                                else {
+                                    view.showSubscribeView(model.subInfectionsIncrease(input[2]));
+                                }
                                 break;
                             default:
-                                view.showInvalidInput();
+                                mainview.showInvalidInput();
+                                break;
                         }
                         break;
                     case "unsubscribe":
-                        if(input[1] == null)
-                            view.showInvalidInput();
+                        if(input.length <= 1)
+                            mainview.showInvalidInput();
                         switch (input[1].toLowerCase()){
                             case "nobodyin":
-                                if(input[2] == null || input[3] == null || input[4] == null)
-                                    view.showInvalidInput();
-                                else if(!model.unsubNobodyInLocation(input[2],Integer.parseInt(input[3]),Integer.parseInt(input[4])))
-                                    System.out.println("Erro ao eliminar a subscrição");
-                                else System.out.println("Deubscrito com sucesso");
+                                if(input.length != 5) {
+                                    mainview.showInvalidInput();
+                                    break;
+                                }
+                                else {
+                                    view.showUnsubscribeView(model.unsubNobodyInLocation(input[2], Integer.parseInt(input[3]), Integer.parseInt(input[4])));
+                                }
                                 break;
                             case "concentrationincin":
-                                if(input[2] == null || input[3] == null || input[4] == null)
-                                    view.showInvalidInput();
-                                else if(!model.unsubConcentrationInc(input[2],Integer.parseInt(input[3]),Integer.parseInt(input[4])))
-                                    System.out.println("Erro ao desubscrever");
-                                else System.out.println("Desubscrito com sucesso");
+                                if(input.length != 5) {
+                                    mainview.showInvalidInput();
+                                    break;
+                                }
+                                else view.showUnsubscribeView(model.unsubConcentrationInc(input[2], Integer.parseInt(input[3]), Integer.parseInt(input[4])));
                                 break;
                             case "concentrationdecin":
-                                if(input[2] == null || input[3] == null || input[4] == null)
-                                    view.showInvalidInput();
-                                else if(!model.unsubConcentrationDec(input[2],Integer.parseInt(input[3]),Integer.parseInt(input[4])))
-                                    System.out.println("Erro ao desubscrever");
-                                else System.out.println("Desubscrito com sucesso");
+                                if(input.length != 5) {
+                                    mainview.showInvalidInput();
+                                    break;
+                                }
+                                else view.showUnsubscribeView(model.unsubConcentrationDec(input[2], Integer.parseInt(input[3]), Integer.parseInt(input[4])));
                                 break;
                             case "anotherinfectedin":
-                                if(input[2] == null)
-                                    view.showInvalidInput();
-                                else if(!model.unsubInfectionsIncrease(input[2]))
-                                    System.out.println("Erro ao desubscrever");
-                                else System.out.println("Desubscrito com sucesso");
+                                if(input.length != 3) {
+                                    mainview.showInvalidInput();
+                                    break;
+                                }
+                                else view.showUnsubscribeView(model.unsubInfectionsIncrease(input[2]));
                                 break;
                             default:
-                                view.showInvalidInput();
+                                mainview.showInvalidInput();
                         }
                         break;
+                    case "help":
+                        if(input.length > 1) {
+                            mainview.showInvalidInput(input[1]);
+                            break;
+                        }
+                        view.help();
+                        break;
                     case "logoff":
+                        if(input.length > 1) {
+                            mainview.showInvalidInput(input[1]);
+                            break;
+                        }
+                        view.showLogOutView();
                         alive = false;
                         contact.interrupt();
-                        contact.join();
                         notReceiver.interrupt();
-                        notReceiver.join();
-                        model.deAuthenticate();
-                        model.clearQueue();
-                        model.restartSubscriber();
-                        System.out.println("Loggedout");
+                        new Controller().init();
                         break;
                     default:
-                        System.out.println(input[0]);
-                        view.showInvalidInput();
+                        mainview.showInvalidInput(input[0]);
                 }
             }
 
@@ -156,16 +204,15 @@ public class LoggedController {
         @Override
         public void run() {
             try{
-                System.out.println("created");
                 //noinspection InfiniteLoopStatement
-                while(!currentThread().isInterrupted()){
-                    System.out.println("alive");
-                    if (model.contact())
+                System.out.println("Alive");
+                while(!Thread.interrupted()){
+                    if (model.contact() && !Thread.interrupted())
                         System.out.println("Contacto com covid"); //TODO view for this
                 }
+                System.out.println("WILL DIE");
                 throw new InterruptedException();
             } catch (InterruptedException e){
-                System.out.println("DEAD");
                 //Do nothing (let thread die)
             }
         }
@@ -175,16 +222,17 @@ public class LoggedController {
         @Override
         public void run() {
             try{
-                System.out.println("created");
+                String not;
                 //noinspection InfiniteLoopStatement
-                while(!currentThread().isInterrupted()){
-                    System.out.println("alive");
-                    System.out.println("Notificação: " + model.receiveNotification()); //TODO view for this
+                System.out.println("Alive");
+                while(!Thread.interrupted() && (not = model.receiveNotification()) != null){
+                    System.out.println("Notificação: " + not);//TODO view for this
                 }
+                System.out.println("WILL DIE");
                 throw new InterruptedException();
             } catch (InterruptedException e){
-                System.out.println("DEAD");
                 //Do nothing (let thread die)
+                System.out.println("DEAD");
             }
         }
     }

@@ -9,6 +9,7 @@ import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ConnectException;
+import java.util.Scanner;
 
 public class Controller {
     private Communication model;
@@ -25,26 +26,47 @@ public class Controller {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 
         boolean alive = true;
+        String[] input;
         while(alive){
-            switch (in.readLine()){
+            switch ((input = in.readLine().split(" "))[0]){
                 case "login":
+                    if(input.length > 1) {
+                        view.showInvalidInput(input[1]);
+                        break;
+                    }
                     Runtime.getRuntime().exec("clear");
                     view.showLogin();
-                    if (!model.authenticate(view.getUsername(), view.getPassword()))
+                    String username = view.getUsername();
+                    if (!model.authenticate(username, view.getPassword()))
                         System.out.println("Error in login"); //TODO view for this
                     else {
                         System.out.println("Login successful"); //TODO view for this
-                        new LoggedController(model,view).init();
+                        new LoggedController(model,view,username).init();
                     }
                     break;
                 case "register":
+                    if(input.length > 1) {
+                        view.showInvalidInput(input[1]);
+                        break;
+                    }
                     Runtime.getRuntime().exec("clear");
                     view.showRegister();
                     if(!model.register(view.getUsername(), view.getPassword(), view.getDomicile()))
                         System.out.println("Error in register"); //TODO view for this
                     else System.out.println("Register successful"); //TODO view for this
                     break;
+                case "help":
+                    if(input.length > 1) {
+                        view.showInvalidInput(input[1]);
+                        break;
+                    }
+                    view.showMainHelp();
+                    break;
                 case "exit":
+                    if(input.length > 1) {
+                        view.showInvalidInput(input[1]);
+                        break;
+                    }
                     alive = false;
                     break;
                 default:
