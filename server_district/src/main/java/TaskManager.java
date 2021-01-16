@@ -24,6 +24,7 @@ public class TaskManager extends Thread {
         Object requestModel, responseModel = null;
         JsonObject jObj = this.gson.fromJson(jsonRequest, JsonObject.class);
         String requestType = jObj.get("RequestType").getAsString();
+        boolean success = true;
 
         switch (requestType){
             case "NotifyLocation":
@@ -45,12 +46,15 @@ public class TaskManager extends Thread {
                 break;
 
             default:
-                System.out.println("Internal Server Error: The request type is invalid");
+                success = false;
+                System.out.println("BAD REQUEST Error: The request type is invalid");
                 break;
         }
 
-        String jsonResponse = this.gson.toJson(responseModel);
-        this.frontendConnection.writeLine(jsonResponse);
+        if(success) {
+            String jsonResponse = this.gson.toJson(responseModel);
+            this.frontendConnection.writeLine(jsonResponse);
+        }
 
         try {
             Thread.currentThread().join();

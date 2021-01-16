@@ -1,11 +1,13 @@
 package Auxiliar;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 public class DistrictServerConfigurations {
     private final String DistrictName;
     private final String FrontendIP;
     private final int FrontendPort;
-    private final String DirectoryIP;
-    private final int DirectoryPort;
+    private final String DirectoryDomainURL;
     private final String PublicNotificationsIP;
     private final int PublicNotificationsPort;
     private final int DistrictDimension;
@@ -13,15 +15,14 @@ public class DistrictServerConfigurations {
     private final int DistrictServerPort;
 
     public DistrictServerConfigurations(String districtName, String frontendIP, int frontendPort,
-                                        String directoryIP, int directoryPort,
+                                        String DirectoryDomainURL,
                                         String publicNotificationsIP, int publicNotificationsPort,
                                         int districtDimension,
-                                        String districtServerIP, int districtServerPort) {
+                                        String districtServerIP, int districtServerPort) throws MalformedURLException {
         this.DistrictName = districtName;
         this.FrontendIP = frontendIP;
         this.FrontendPort = frontendPort;
-        this.DirectoryIP = directoryIP;
-        this.DirectoryPort = directoryPort;
+        this.DirectoryDomainURL = DirectoryDomainURL;
         this.PublicNotificationsIP = publicNotificationsIP;
         this.PublicNotificationsPort = publicNotificationsPort;
         this.DistrictDimension = districtDimension;
@@ -41,12 +42,8 @@ public class DistrictServerConfigurations {
         return FrontendPort;
     }
 
-    public String getDirectoryIP() {
-        return DirectoryIP;
-    }
-
-    public int getDirectoryPort() {
-        return DirectoryPort;
+    public String getDirectoryDomainURL() {
+        return this.DirectoryDomainURL;
     }
 
     public String getPublicNotificationsIP() {
