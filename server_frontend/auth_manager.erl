@@ -92,7 +92,6 @@ auth_manager_add_sub(State, Pid, Username, District) ->
             NewAccount = Account#account{sub = Account#account.sub ++ [District]},
             NewState = State#state{accounts = maps:put(Username, NewAccount, State#state.accounts)},
             Pid ! {ok, self()},
-            io:fwrite("cona", []),
             auth_manager(NewState)
     end.
 
