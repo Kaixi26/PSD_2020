@@ -33,9 +33,9 @@ public class Main {
         String public_notifications_ip = prop.getProperty("Public_notifications.ip");
         int public_notifications_port = Integer.parseInt(prop.getProperty("Public_notifications.port"));
 
-        int district_dimension = Integer.parseInt(prop.getProperty("District.dimension." + districtName.toLowerCase()));
-        String server_district_ip = prop.getProperty("Server.district.ip." + districtName.toLowerCase());
-        int server_district_port = Integer.parseInt(prop.getProperty("Server.district.port." + districtName.toLowerCase()));
+        int district_dimension = Integer.parseInt(prop.getProperty("District.dimension." + districtName.toLowerCase().replace(" ","_")));
+        String server_district_ip = prop.getProperty("Server.district.ip." + districtName.toLowerCase().replace(" ","_"));
+        int server_district_port = Integer.parseInt(prop.getProperty("Server.district.port." + districtName.toLowerCase().replace(" ","_")));
 
         return new DistrictServerConfigurations(districtName, frontend_ip, frontend_port, directory_domainURL, public_notifications_ip, public_notifications_port, district_dimension, server_district_ip, server_district_port);
     }

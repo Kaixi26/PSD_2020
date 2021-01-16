@@ -51,12 +51,16 @@ public class DirectoryPoster {
         String bodyJson = this.gson.toJson(new ReportInfectionPostModel(this.districtName, numberOfContacts));
         System.out.println(bodyJson);
 
-        StringEntity stringEntity = new StringEntity(bodyJson);
-        httpPost.getRequestLine();
-        httpPost.setEntity(stringEntity);
+        try {
+            StringEntity stringEntity = new StringEntity(bodyJson);
+            httpPost.getRequestLine();
+            httpPost.setEntity(stringEntity);
 
-        HttpResponse response = this.httpClient.execute(httpPost);
-        System.out.println("Directory Poster -> Report Infection : " + response.getStatusLine());
+            HttpResponse response = this.httpClient.execute(httpPost);
+            System.out.println("Directory Poster -> Report Infection : " + response.getStatusLine());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void reportMovement(Location location, int numberOfUsersInLocation) {
@@ -66,28 +70,36 @@ public class DirectoryPoster {
         String bodyJson = this.gson.toJson(new ReportMovementPostModel(this.districtName, location, numberOfUsersInLocation));
         System.out.println(bodyJson);
 
-        StringEntity stringEntity = new StringEntity(this.gson.toJson(bodyJson));
-        httpPost.getRequestLine();
-        httpPost.setEntity(stringEntity);
+        try {
+            StringEntity stringEntity = new StringEntity(this.gson.toJson(bodyJson));
+            httpPost.getRequestLine();
+            httpPost.setEntity(stringEntity);
 
-        HttpResponse response = this.httpClient.execute(httpPost);
+            HttpResponse response = this.httpClient.execute(httpPost);
 
-        System.out.println("Directory Poster -> Report Movement : " + response.getStatusLine());
+            System.out.println("Directory Poster -> Report Movement : " + response.getStatusLine());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void reportNewUser() {
         HttpPost httpPost = new HttpPost(this.reportNewUserURI);
         httpPost.setHeader("Content-type", "application/json");
 
-        String bodyJson = this.gson.toJson(new ReportNewUserPostModel(this.districtName));
-        System.out.println(bodyJson);
+        try {
+            String bodyJson = this.gson.toJson(new ReportNewUserPostModel(this.districtName));
+            System.out.println(bodyJson);
 
-        StringEntity stringEntity = new StringEntity(bodyJson);
-        httpPost.getRequestLine();
-        httpPost.setEntity(stringEntity);
+            StringEntity stringEntity = new StringEntity(bodyJson);
+            httpPost.getRequestLine();
+            httpPost.setEntity(stringEntity);
 
-        HttpResponse response = this.httpClient.execute(httpPost);
+            HttpResponse response = this.httpClient.execute(httpPost);
 
-        System.out.println("Directory Poster -> Report New User : " + response.getStatusLine());
+            System.out.println("Directory Poster -> Report New User : " + response.getStatusLine());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

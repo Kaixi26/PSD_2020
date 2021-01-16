@@ -2,10 +2,7 @@ package Services;
 
 import Auxiliar.DistrictServerConfigurations;
 import Models.Location;
-import Models.PublicNotifications.ConcentrationDecreaseInLocation;
-import Models.PublicNotifications.ConcentrationIncreaseInLocation;
-import Models.PublicNotifications.InfectionsIncrease;
-import Models.PublicNotifications.NotificationType;
+import Models.PublicNotifications.*;
 import com.google.gson.Gson;
 import org.jetbrains.annotations.NotNull;
 import org.zeromq.SocketType;
@@ -54,7 +51,7 @@ public class PublicNotificationsSender {
     public void nobodyInLocation(@NotNull Location location) {
         System.out.println("Public Notifications: Nobody");
         String header = this.districtName + "(" + location.getLatitude() + "," + location.getLongitude() + ")_" + NotificationType.NobodyInLocation.name();
-        String body = this.gson.toJson(new ConcentrationDecreaseInLocation(this.districtName, location));
+        String body = this.gson.toJson(new NobodyInLocation(this.districtName, location));
         String packet = header + " " + body;
         this.locker.lock();
         this.socketPUB.send(packet);
