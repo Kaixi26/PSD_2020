@@ -24,7 +24,7 @@ public class Infection {
     public boolean receiveInfectedRes(){
         String json = com.receiveResponse();
         InfectedResObj res = gson.fromJson(json, InfectedResObj.class);
-        return res.code.equals("200");
+        return res.code.equals("201");
     }
 
     //Objecto que representa o json enviado ao servidor front-end para notificar que o utilizador está doente

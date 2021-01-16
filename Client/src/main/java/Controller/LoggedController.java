@@ -208,7 +208,7 @@ public class LoggedController {
                     view.showContactWarning();
                 }
                 throw new InterruptedException();
-            } catch (InterruptedException e){
+            } catch (Exception e){
                 //Do nothing (let thread die)
             }
         }
@@ -224,7 +224,7 @@ public class LoggedController {
                     view.showNotificationView(not);
                 }
                 throw new InterruptedException();
-            } catch (InterruptedException e){
+            } catch (Exception e){
                 //Do nothing (let thread die)
             }
         }
