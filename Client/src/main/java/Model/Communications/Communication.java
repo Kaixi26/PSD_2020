@@ -31,7 +31,7 @@ public class Communication {
         this.subs = new Subscriptions();
     }
 
-    private void loadConfigFile(){
+    private void loadConfigFile() {
         try (InputStream input = new FileInputStream("src/main/resources/config.properties")) {
             Properties prop = new Properties();
             prop.load(input);
@@ -46,152 +46,144 @@ public class Communication {
 
     //Método que faz uso do Garbage Collector para eliminar as subscrições feitas pelo utilizador anterior, ao fazer um novo "Subscriber" não existem subscrições e o
     // "Subscriber" da sessão anterior vai ser eliminado pelo garbage collector
-    public void restartSubscriber(){
-        this.sub = new Subscriber(ip_zeromq,port_zeromq);
+    public void restartSubscriber() {
+        this.sub = new Subscriber(ip_zeromq, port_zeromq);
     }
 
     //Método que autentica um utilizador, retorna true/false para sucesso/insucesso
-    public boolean authenticate(String name,String pass){
+    public boolean authenticate(String name, String pass) {
         Authentication a = new Authentication(com);
-        a.sendAuthenticationReq(name,pass);
+        a.sendAuthenticationReq(name, pass);
         return a.receiveAuthenticationRes();
     }
 
     //Método que faz logout ao utilizador, retorna true/false para sucesso/insucesso
-    public boolean deAuthenticate(){
+    public boolean deAuthenticate() {
         Authentication a = new Authentication(com);
         a.sendDeAuthenticationReq();
         return a.receiveDeAuthenticationRes();
     }
 
     //Método que regista um utilizador, retorna true/false para sucesso/insucesso
-    public boolean register(String name,String pass,String dom){
+    public boolean register(String name, String pass, String dom) {
         Registration r = new Registration(com);
-        r.sendRegistrationReq(name,pass,dom);
+        r.sendRegistrationReq(name, pass, dom);
         return r.receiveRegistrationRes();
     }
 
     //Método que atualiza a localização de um utilizador, retorna true/false para sucesso/insucesso
-    public boolean position(int lat,int lon){
+    public boolean position(int lat, int lon) {
         Location l = new Location(com);
-        l.sendNotifyLocationReq(lat,lon);
+        l.sendNotifyLocationReq(lat, lon);
         return l.receiveNotifyLocationRes();
     }
 
     //Método que obtém o número de pessoas numa dada localização do seu distrito
-    public int probe(int lat,int lon){
+    public int probe(int lat, int lon) {
         Location l = new Location(com);
-        l.sendProbeLocationReq(lat,lon);
+        l.sendProbeLocationReq(lat, lon);
         return l.receiveProbeLocationRes();
     }
 
     //Método que comunica ao servidor que o utilizador está infetado
-    public boolean sick(){
+    public boolean sick() {
         Infection i = new Infection(com);
         i.sendInfectedReq();
         return i.receiveInfectedRes();
     }
 
-    public boolean contact(){
+    public boolean contact() {
         return !com.receiveNotification().equals("error");
     }
 
-    public void clearQueue(){
+    public void clearQueue() {
         com.clearNotificationQueue();
     }
 
     //Método que subscreve a notificação de aumento da concentração de pessoas numa localização de um certo distrito
     public boolean subConcentrationInc(String district, int lat, int lon) throws DistrictLimitException {
-        if(sub.subConcentrationInc(district,lat,lon)){
-            this.addSubscription(new SubscriptionObj(district,"ConcentrationIncreaseInLocation",lat,lon));
-            Subscription s = new Subscription(com);
-            s.sendSubscriptionReq(district+"("+lat+","+lon+")"+"_"+"ConcentrationIncreaseInLocation");
-            return true;
-        }
-        return false;
+        this.addSubscription(new SubscriptionObj(district, "ConcentrationIncreaseInLocation", lat, lon));
+        sub.subConcentrationInc(district, lat, lon);
+        Subscription s = new Subscription(com);
+        s.sendSubscriptionReq(district + "(" + lat + "," + lon + ")" + "_" + "ConcentrationIncreaseInLocation");
+        return s.receiveSubscriptionRes();
     }
 
     //Método que subscreve a notificação de diminuição da concentração de pessoas numa localização de um certo distrito
     public boolean subConcentrationDec(String district, int lat, int lon) throws DistrictLimitException {
-        if(sub.subConcentrationDec(district,lat,lon)){
-            this.addSubscription(new SubscriptionObj(district,"ConcentrationDecreaseInLocation",lat,lon));
-            Subscription s = new Subscription(com);
-            s.sendSubscriptionReq(district+"("+lat+","+lon+")"+"_"+"ConcentrationDecreaseInLocation");
-            return true;
-        }
-        return false;
+        this.addSubscription(new SubscriptionObj(district, "ConcentrationDecreaseInLocation", lat, lon));
+        sub.subConcentrationDec(district, lat, lon);
+        Subscription s = new Subscription(com);
+        s.sendSubscriptionReq(district + "(" + lat + "," + lon + ")" + "_" + "ConcentrationDecreaseInLocation");
+        return s.receiveSubscriptionRes();
     }
 
     //Método que subscreve a notificação de quando deixa de haver pessoas numa certa localização de um certo distrito
     public boolean subNobodyInLocation(String district, int lat, int lon) throws DistrictLimitException {
-        if(sub.subNobodyInLocation(district,lat,lon)){
-            this.addSubscription(new SubscriptionObj(district,"NobodyInLocation",lat,lon));
-            Subscription s = new Subscription(com);
-            s.sendSubscriptionReq(district+"("+lat+","+lon+")"+"_"+"NobodyInLocation");
-            return true;
-        }
-        return false;
+        this.addSubscription(new SubscriptionObj(district, "NobodyInLocation", lat, lon));
+        sub.subNobodyInLocation(district, lat, lon);
+        Subscription s = new Subscription(com);
+        s.sendSubscriptionReq(district + "(" + lat + "," + lon + ")" + "_" + "NobodyInLocation");
+        return s.receiveSubscriptionRes();
     }
 
     //Método que subscreve a notificação de occorrência de mais um infetado num dado distrito
     public boolean subInfectionsIncrease(String district) throws DistrictLimitException {
-        if(sub.subInfectionsIncrease(district)){
-            this.addSubscription(new SubscriptionObj(district,"InfectionsIncrease"));
-            Subscription s = new Subscription(com);
-            s.sendSubscriptionReq(district+"_"+"InfectionsIncrease");
-            return true;
-        }
-        return false;
+        this.addSubscription(new SubscriptionObj(district, "InfectionsIncrease"));
+        sub.subInfectionsIncrease(district);
+        Subscription s = new Subscription(com);
+        s.sendSubscriptionReq(district + "_" + "InfectionsIncrease");
+        return s.receiveSubscriptionRes();
     }
 
     public boolean unsubConcentrationInc(String district, int lat, int lon) {
-        if(sub.unsubConcentrationInc(district,lat,lon)){
-            this.removeSubscription(new SubscriptionObj(district,"ConcentrationIncreaseInLocation",lat,lon));
+        if (sub.unsubConcentrationInc(district, lat, lon)) {
+            this.removeSubscription(new SubscriptionObj(district, "ConcentrationIncreaseInLocation", lat, lon));
             Subscription s = new Subscription(com);
-            s.sendUnsubscriptionReq(district+"("+lat+","+lon+")"+"_"+"ConcentrationIncreaseInLocation");
-            return true;
+            s.sendUnsubscriptionReq(district + "(" + lat + "," + lon + ")" + "_" + "ConcentrationIncreaseInLocation");
+            return s.receiveUnsubscriptioneRes();
         }
         return false;
     }
 
     public boolean unsubConcentrationDec(String district, int lat, int lon) {
-        if(sub.unsubConcentrationDec(district,lat,lon)){
-            this.removeSubscription(new SubscriptionObj(district,"ConcentrationDecreaseInLocation",lat,lon));
+        if (sub.unsubConcentrationDec(district, lat, lon)) {
+            this.removeSubscription(new SubscriptionObj(district, "ConcentrationDecreaseInLocation", lat, lon));
             Subscription s = new Subscription(com);
-            s.sendUnsubscriptionReq(district+"("+lat+","+lon+")"+"_"+"ConcentrationDecreaseInLocation");
-            return true;
+            s.sendUnsubscriptionReq(district + "(" + lat + "," + lon + ")" + "_" + "ConcentrationDecreaseInLocation");
+            return s.receiveUnsubscriptioneRes();
         }
         return false;
     }
 
     public boolean unsubNobodyInLocation(String district, int lat, int lon) {
-        if(sub.unsubNobodyInLocation(district,lat,lon)){
-            this.removeSubscription(new SubscriptionObj(district,"NobodyInLocation",lat,lon));
+        if (sub.unsubNobodyInLocation(district, lat, lon)) {
+            this.removeSubscription(new SubscriptionObj(district, "NobodyInLocation", lat, lon));
             Subscription s = new Subscription(com);
-            s.sendUnsubscriptionReq(district+"("+lat+","+lon+")"+"_"+"NobodyInLocation");
-            return true;
+            s.sendUnsubscriptionReq(district + "(" + lat + "," + lon + ")" + "_" + "NobodyInLocation");
+            return s.receiveUnsubscriptioneRes();
         }
         return false;
     }
 
     public boolean unsubInfectionsIncrease(String district) {
-        if(sub.unsubInfectionsIncrease(district)){
-            this.removeSubscription(new SubscriptionObj(district,"InfectionsIncrease"));
+        if (sub.unsubInfectionsIncrease(district)) {
+            this.removeSubscription(new SubscriptionObj(district, "InfectionsIncrease"));
             Subscription s = new Subscription(com);
-            s.sendUnsubscriptionReq(district+"_"+"NobodyInLocation");
-            return true;
+            s.sendUnsubscriptionReq(district + "_" + "NobodyInLocation");
+            return s.receiveUnsubscriptioneRes();
         }
         return false;
     }
 
-    private List<String> subscriptions(){
+    private List<String> subscriptions() {
         Subscription s = new Subscription(com);
         s.sendSubscriptionsReq();
         return s.receiveSubscriptionsReq();
     }
 
 
-    public String receiveNotification(){
+    public String receiveNotification() {
         return sub.receive();
     }
 
@@ -203,29 +195,28 @@ public class Communication {
         subs.add(s);
     }
 
-    public void removeSubscription(String s){
+    public void removeSubscription(String s) {
         subs.remove(s);
     }
 
-    public void removeSubscription(SubscriptionObj s){
+    public void removeSubscription(SubscriptionObj s) {
         subs.remove(s);
     }
 
-    public boolean updateSubscriptions(){
-        try{
+    public boolean updateSubscriptions() {
+        try {
             List<String> l = this.subscriptions();
-            for( String s : l){
+            for (String s : l) {
                 sub.subscribe(s);
                 this.addSubscription(s);
             }
             return true;
-        }
-        catch (DistrictLimitException e) {
+        } catch (DistrictLimitException e) {
             return false;
         }
     }
 
-    public Map<String,List<SubscriptionObj>> getSubscriptions(){
+    public Map<String, List<SubscriptionObj>> getSubscriptions() {
         return this.subs.getSubs();
     }
 

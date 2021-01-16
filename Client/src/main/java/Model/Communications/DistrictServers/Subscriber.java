@@ -20,7 +20,7 @@ public class Subscriber {
     }
 
     public boolean subscribe(String s){
-        System.out.println("Subscribred to:" + s);
+        System.out.println("Subscribed to:" + s + "//Its not here"); //TODO ERASE
         return socket.subscribe(s.getBytes());
     }
 
@@ -71,7 +71,12 @@ public class Subscriber {
 
     //Método que recebe notificações vindas do broker, só retorna o json que vem nestas notificações
     public String receive(){
-        return socket.recvStr().split(" ")[1];
+        try {
+            return socket.recvStr().split(" ")[1];
+        } catch (Exception e){
+            //DO nothing, i think sometimes it launches an exception when gb deletes this object
+            return "";
+        }
     }
 
 

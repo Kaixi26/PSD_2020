@@ -1,5 +1,7 @@
 package View;
 
+import com.google.gson.Gson;
+
 public class LoggedControllerView {
     public void init(String user){
         System.out.println(
@@ -74,6 +76,82 @@ public class LoggedControllerView {
 
     public void showContactWarning(){
         System.out.println("You have been in close contact with a person that had the virus");
+    }
+
+    public void showNotificationView(String json){
+        Gson g = new Gson();
+        NotificationObj obj = g.fromJson(json,NotificationObj.class);
+        System.out.println("Notification arrived! --> " + obj.NotificationType + "//Its not here"); //TODO ERASE
+        switch (obj.NotificationType) {
+            case "InfectionsIncrease":
+                showInfectionsIncreaseView(obj);
+                break;
+            case "ConcentrationIncreaseInLocation":
+                showConcentrationIncreaseInLocationView(obj);
+                break;
+            case "ConcentrationDecreaseInLocation":
+                showConcentrationDecreaseInLocationView(obj);
+                break;
+            case "NobodyInLocation":
+                showNobodyInLocationView(obj);
+                break;
+        }
+
+
+    }
+
+    private void showNotificationBanner(){
+        System.out.println(
+                "##########################################################\n" +
+                        "##                     Notification                     ##\n" +
+                        "##########################################################\n"
+        );
+    }
+
+    private void showInfectionsIncreaseView(NotificationObj obj){
+        showNotificationBanner();
+        System.out.println(
+                "The number of infections in " + obj.district_name + " increased! Stay safe.\n"
+        );
+    }
+
+    private void showConcentrationIncreaseInLocationView(NotificationObj obj){
+        showNotificationBanner();
+        System.out.println(
+                "The number of people in " + obj.district_name + " at the position " +
+                        "(" + obj.location.latitude + "," + obj.location.longitude + ")\n" +
+                        "has increased! Stay safe.\n"
+        );
+    }
+
+    private void showConcentrationDecreaseInLocationView(NotificationObj obj){
+        showNotificationBanner();
+        System.out.println(
+                "The number of people in " + obj.district_name + " at the position " +
+                        "(" + obj.location.latitude + "," + obj.location.longitude + ")\n" +
+                        "has decreased! Stay safe.\n"
+        );
+    }
+
+    private void showNobodyInLocationView(NotificationObj obj){
+        showNotificationBanner();
+        System.out.println(
+                "The position " +
+                        "(" + obj.location.latitude + "," + obj.location.longitude + ")" +
+                        " in " + obj.district_name + "is empty! Stay safe.\n"
+        );
+    }
+
+    private class NotificationObj{
+        public posObj location;
+        public String version;
+        public String district_name;
+        public String NotificationType;
+    }
+
+    private class posObj{
+        public String latitude;
+        public String longitude;
     }
 
 }
