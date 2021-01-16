@@ -103,6 +103,10 @@ public class MasterManager {
         if(requestModel.getUsername() == null) {
             return new NotifyInfectionResponse(HttpStatus.BAD_REQUEST.value(), null);
         }
+        if(this.clientsLocationManager.isFirstTime(requestModel.getUsername())) {
+            return new NotifyInfectionResponse(HttpStatus.BAD_REQUEST.value(), null);
+        }
+
         Set<String> contacts = this.clientsContactsManager.getAllContacts(requestModel.getUsername());
         Location actualLocation = this.clientsLocationManager.getClientLocation(requestModel.getUsername());
 
