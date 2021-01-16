@@ -1,5 +1,6 @@
 import Models.CommunicationProtocols.Requests.NotifyInfectionRequest;
 import Models.CommunicationProtocols.Requests.NotifyLocationRequest;
+import Models.DirectoryPostModels.ReportInfectionPostModel;
 import Models.Location;
 import Models.PublicNotifications.ConcentrationDecreaseInLocation;
 import Models.PublicNotifications.ConcentrationIncreaseInLocation;
@@ -14,10 +15,15 @@ public class RequestConverterGson {
         Gson gson = new Gson();
 
         String districtName = "Braga";
+        int n = 10;
+        ReportInfectionPostModel r = new ReportInfectionPostModel(districtName, n);
+
+        System.out.println(gson.toJson(r));
+
         Location location = new Location(1,2);
 
         String header = districtName + "(" + location.getLatitude() + "," + location.getLongitude() + ")_" + NotificationType.ConcentrationIncreaseInLocation.name();
-        String body = gson.toJson(new ConcentrationIncreaseInLocation(districtName, location));
+        String body = gson.toJson(new ReportInfectionPostModel(districtName, n));//new ConcentrationIncreaseInLocation(districtName, location));
         String packet = header + " " + body;
 
         System.out.println(gson.toJson(packet));
