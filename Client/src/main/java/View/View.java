@@ -5,7 +5,10 @@ import java.io.InputStreamReader;
 
 public class View {
 
+    public LoggedControllerView lv;
+
     public View(){
+        this.lv = new LoggedControllerView();
     }
 
     public void init(){
@@ -14,12 +17,15 @@ public class View {
              +  "##                         App                          ##\n"
              +  "##########################################################\n"
              +  "\n\n"
-             +  "Welcome!\n"
         );
     }
 
     public void showInvalidInput(){
         System.out.println("Invalid Input!");
+    }
+
+    public void showInvalidInput(String input){
+        System.out.println("Invalid Input!\n" + input);
     }
 
     public void showLogin(){
@@ -74,4 +80,27 @@ public class View {
         }
         return r;
     }
+
+    public void showErrorLogin(){
+        System.out.println("Error in login");
+    }
+
+    public void showErrorRegister(){
+        System.out.println("Error in register");
+    }
+
+    public void showSuccessRegister(){
+        System.out.println("Register successful");
+    }
+
+    public void showMainHelp(){
+        System.out.println(
+                "commands available:\n" +
+                        "\tlogin - to login\n" +
+                        "\tregister - to register a new user\n" +
+                        "\thelp - for this list\n" +
+                        "\texit - exit the application"
+        );
+    }
+
 }

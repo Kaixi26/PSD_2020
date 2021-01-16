@@ -13,7 +13,7 @@ public class Publisher {
         try (ZContext context = new ZContext();
              ZMQ.Socket socket = context.createSocket(SocketType.PUB))
         {
-            socket.connect("tcp://localhost:" + "1235");
+            socket.connect("tcp://localhost:" + "12348");
             while (true) {
                 String str = br.readLine();
                 if (str == null) break;

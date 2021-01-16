@@ -38,7 +38,7 @@ public class Authentication {
     public boolean receiveDeAuthenticationRes(){
         String json = com.receiveResponse();
         DeAuthenticationResObj res = gson.fromJson(json,DeAuthenticationResObj.class);
-        if(res.ReplyType.equals("Logout") && res.version.equals("1.0.0")) //TODO do this check everywhere
+        if(res.ReplyType.equals("Logout") && res.version.equals("1.0.0"))
             return res.code.equals("200");
         else
             return false;

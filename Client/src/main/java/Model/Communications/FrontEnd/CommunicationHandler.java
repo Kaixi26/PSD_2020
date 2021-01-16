@@ -1,5 +1,10 @@
 package Model.Communications.FrontEnd;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
@@ -37,18 +42,16 @@ public class CommunicationHandler {
         try {
             return queue.take();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            return "error";
         }
-        return "error";
     }
 
     public String receiveNotification(){
         try {
             return notificationsQueue.take();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            return "error";
         }
-        return "error";
     }
 
     public class Receiver implements Runnable {
@@ -66,7 +69,8 @@ public class CommunicationHandler {
                         new InputStreamReader(socket.getInputStream()));
                 while (true){
                     String json = in.readLine();
-                    if(json.contains("Notification")) //TODO change this to be more specific
+                    System.out.println(json); //TODO ERASE
+                    if(json.contains("\"ReplyType\":\"Notification\""))
                         notificationsQueue.put(json);
                     else
                         queue.put(json);
@@ -75,7 +79,5 @@ public class CommunicationHandler {
                 ex.printStackTrace();
             }
         }
-
-
     }
 }

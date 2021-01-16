@@ -8,7 +8,7 @@ public class Broker {
              ZMQ.Socket pubs = context.createSocket(SocketType.XSUB);
              ZMQ.Socket subs = context.createSocket(SocketType.XPUB))
         {
-            pubs.bind("tcp://localhost:"+"1235");
+            pubs.bind("tcp://localhost:"+"12348");
             subs.bind("tcp://localhost:"+"1234");
             new Proxy(context, pubs, subs).poll();
         }
