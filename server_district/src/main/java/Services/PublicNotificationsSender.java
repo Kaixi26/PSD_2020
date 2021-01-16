@@ -22,7 +22,8 @@ public class PublicNotificationsSender {
 
     public PublicNotificationsSender(DistrictServerConfigurations configurations, Gson gson) {
         this.locker = new ReentrantLock();
-        this.districtName = configurations.getDistrictName();
+        this.districtName = configurations.getDistrictName().replace(" ", "/");
+        System.out.println(districtName);
         this.gson = gson;
 
         final ZContext context = new ZContext();
