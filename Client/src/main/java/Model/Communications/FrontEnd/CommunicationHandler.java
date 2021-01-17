@@ -33,6 +33,7 @@ public class CommunicationHandler {
         try{
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             out.println(json);
+            System.out.println("SENT --> " + json + "//Its not here"); //TODO ERASE
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -69,7 +70,7 @@ public class CommunicationHandler {
                         new InputStreamReader(socket.getInputStream()));
                 while (true){
                     String json = in.readLine();
-                    System.out.println(json); //TODO ERASE
+                    System.out.println("Arrived --> " + json + "//Its not here"); //TODO ERASE
                     if(json.contains("\"ReplyType\":\"Notification\""))
                         notificationsQueue.put(json);
                     else

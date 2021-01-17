@@ -8,6 +8,7 @@ import Models.CommunicationProtocols.Responses.NotifyInfectionResponse;
 import Models.CommunicationProtocols.Responses.NotifyLocationResponse;
 import Models.CommunicationProtocols.Responses.ProbeLocationResponse;
 import Models.Location;
+import Services.DirectoryPoster;
 import Services.PublicNotificationsSender;
 import Services.ServiceBiResult;
 import Services.ServiceResult;
@@ -21,12 +22,14 @@ public class MasterManager {
     private ClientsLocationManager clientsLocationManager;
     private ClientsContactsManager clientsContactsManager;
     private PublicNotificationsSender notificationsSender;
+    private DirectoryPoster directoryPoster;
 
-    public MasterManager(DistrictServerConfigurations configurations, PublicNotificationsSender notificationsSender) {
+    public MasterManager(DistrictServerConfigurations configurations, PublicNotificationsSender notificationsSender, DirectoryPoster directoryPoster) {
         this.districtMapManager = new DistrictMapManager(configurations.getDistrictDimension());
         this.clientsLocationManager = new ClientsLocationManager();
         this.clientsContactsManager = new ClientsContactsManager();
         this.notificationsSender = notificationsSender;
+        this.directoryPoster = directoryPoster;
     }
 
     public NotifyLocationResponse moveClientToLocation(@NotNull NotifyLocationRequest requestModel) {
@@ -52,13 +55,33 @@ public class MasterManager {
         this.clientsContactsManager.addContact(result.getAdditionalResult());
 
         if(source != null) {
+            /**
+             * Concentration Decrease in SOURCE Notification
+             */
             this.notificationsSender.concentrationDecreaseInLocation(source);
+        } else {
+            /**
+             * NewUser Report Directory @POST
+             */
+            this.directoryPoster.reportNewUser();
         }
+
+        /**
+         * Concentration Increase in DESTINATION Notification
+         */
         this.notificationsSender.concentrationIncreaseInLocation(requestModel.getLocation());
 
+        /**
+         * Nobody in SOURCE Notification
+         */
         if(result.getResult()) {
             this.notificationsSender.nobodyInLocation(source);
         }
+
+        /**
+         * Movement Report Directory @POST
+         */
+        this.directoryPoster.reportMovement(requestModel.getLocation(), result.getAdditionalResult().size());
 
         return new NotifyLocationResponse(HttpStatus.OK.value());
     }
@@ -80,6 +103,10 @@ public class MasterManager {
         if(requestModel.getUsername() == null) {
             return new NotifyInfectionResponse(HttpStatus.BAD_REQUEST.value(), null);
         }
+        if(this.clientsLocationManager.isFirstTime(requestModel.getUsername())) {
+            return new NotifyInfectionResponse(HttpStatus.BAD_REQUEST.value(), null);
+        }
+
         Set<String> contacts = this.clientsContactsManager.getAllContacts(requestModel.getUsername());
         Location actualLocation = this.clientsLocationManager.getClientLocation(requestModel.getUsername());
 
@@ -89,10 +116,27 @@ public class MasterManager {
         this.clientsLocationManager.removeClientLocation(requestModel.getUsername());
 
         if(cellIsEmpty) {
+            /**
+             * Nobody in Location Notification
+             */
             this.notificationsSender.nobodyInLocation(actualLocation);
         }
+
+        /**
+         * Concentration Decrease in Location Notification
+         */
         this.notificationsSender.concentrationDecreaseInLocation(actualLocation);
+
+        /**
+         * Infections Increase Notification
+         */
         this.notificationsSender.infectionsIncrease();
+
+
+        /**
+         * Infection Report Directory @POST
+         */
+        this.directoryPoster.reportInfection(contacts.size());
 
         return new NotifyInfectionResponse(HttpStatus.OK.value(), contacts);
     }

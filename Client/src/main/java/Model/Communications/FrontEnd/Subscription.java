@@ -25,7 +25,7 @@ public class Subscription {
     public boolean receiveSubscriptionRes(){
         String json = com.receiveResponse();
         SubscriptionResObj res = gson.fromJson(json, SubscriptionResObj.class);
-        return (res.code.equals("200") && res.version.equals("1.0.0") && res.ReplyType.equals("Subscribe"));
+        return (res.code.equals("201") && res.version.equals("1.0.0") && res.ReplyType.equals("Subscribe"));
     }
 
     public void sendSubscriptionsReq(){
@@ -49,7 +49,7 @@ public class Subscription {
     public boolean receiveUnsubscriptioneRes(){
         String json = com.receiveResponse();
         UnsubscriptionResObj res = gson.fromJson(json, UnsubscriptionResObj.class);
-        return (res.code.equals("200") && res.version.equals("1.0.0") && res.ReplyType.equals("Unsubscribe"));
+        return (res.code.equals("201") && res.version.equals("1.0.0") && res.ReplyType.equals("Unsubscribe"));
     }
 
     private class SubscriptionReqObj{
@@ -70,7 +70,7 @@ public class Subscription {
 
     private class UnsubscriptionReqObj{
         private final String version = "1.0.0";
-        private final String RequestType = "Subscribe";
+        private final String RequestType = "Unsubscribe";
         private final String SubscriptionType;
 
         public UnsubscriptionReqObj(String type){

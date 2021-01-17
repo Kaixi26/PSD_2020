@@ -208,7 +208,7 @@ public class LoggedController {
                     view.showContactWarning();
                 }
                 throw new InterruptedException();
-            } catch (InterruptedException e){
+            } catch (Exception e){
                 //Do nothing (let thread die)
             }
         }
@@ -221,10 +221,10 @@ public class LoggedController {
                 String not;
                 //noinspection InfiniteLoopStatement
                 while(!Thread.interrupted() && (not = model.receiveNotification()) != null){
-                    System.out.println("Notificação: " + not); //TODO view for this
+                    view.showNotificationView(not);
                 }
                 throw new InterruptedException();
-            } catch (InterruptedException e){
+            } catch (Exception e){
                 //Do nothing (let thread die)
             }
         }
