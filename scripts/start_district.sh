@@ -1,5 +1,5 @@
 #/bin/env sh
-pushd server_district
+cd server_district
 if [[ -z "$1" ]]; then
     echo "No argument given."
     read -n 1
