@@ -71,8 +71,9 @@ public class CommunicationHandler {
                 while (true){
                     String json = in.readLine();
                     System.out.println("Arrived --> " + json + "//Its not here"); //TODO ERASE
-                    if(json.contains("\"ReplyType\":\"Notification\""))
+                    if(json.contains("\"ReplyType\": \"Notification\"")) {
                         notificationsQueue.put(json);
+                    }
                     else
                         queue.put(json);
                 }
