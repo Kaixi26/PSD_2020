@@ -4,7 +4,7 @@ import Models.Location;
 import com.google.gson.annotations.SerializedName;
 
 public class ReportMovementPostModel {
-    @SerializedName("name")
+    @SerializedName("district")
     private final String districtName;
     @SerializedName("longitude")
     private final int longitude;
