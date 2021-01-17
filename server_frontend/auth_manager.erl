@@ -1,14 +1,14 @@
 -module(auth_manager).
 -export([create/0, account_from/3, put_account/3, auth_account/3, account_name/1
         , account_district/1, get_account/2, add_sub/3, rm_sub/3
-        , account_subscriptions/1
+        , account_subscriptions/1, is_sick/2, add_sick/2
         ]).
 -record(state, {accounts, logs}).
--record(account, {name, pass, res, sub}).
+-record(account, {name, pass, res, sub, sick}).
 
 % account_from(Username, Password) -> Account
 account_from(Username, Password, Residency) ->
-    #account{name = Username, pass = Password, res = Residency, sub = []}.
+    #account{name = Username, pass = Password, res = Residency, sub = [], sick = false}.
 
 account_name(Account) ->
     Account#account.name.
@@ -57,6 +57,16 @@ auth_manager(State) ->
             auth_manager_add_sub(State, Pid, Username, District);
         {{rm_sub, Pid}, {Username, District}} ->
             auth_manager_rm_sub(State, Pid, Username, District);
+        {{add_sick, Pid}, {Username}} ->
+            auth_manager_add_sick(State, Pid, Username);
+        {{is_sick, Pid}, {Username}} ->
+            case maps:get(Username, State#state.accounts, false) of
+                false ->
+                    Pid ! {false, self()};
+                Account ->
+                    Pid ! {Account#account.sick, self()}
+            end,
+            auth_manager(State);
         _ ->
             error_logger:error_report("Invalid message received."),
             auth_manager(State)
@@ -90,6 +100,18 @@ auth_manager_add_sub(State, Pid, Username, District) ->
             auth_manager(State);
         Account ->
             NewAccount = Account#account{sub = (Account#account.sub -- [District]) ++ [District]},
+            NewState = State#state{accounts = maps:put(Username, NewAccount, State#state.accounts)},
+            Pid ! {ok, self()},
+            auth_manager(NewState)
+    end.
+
+auth_manager_add_sick(State, Pid, Username) ->
+    case maps:get(Username, State#state.accounts, unregistered) of
+        unregistered ->
+            Pid ! {unregistered, self()},
+            auth_manager(State);
+        Account ->
+            NewAccount = Account#account{sick = true},
             NewState = State#state{accounts = maps:put(Username, NewAccount, State#state.accounts)},
             Pid ! {ok, self()},
             auth_manager(NewState)
@@ -141,4 +163,14 @@ add_sub(Manager, Username, District) ->
 % rm_sub(Manager, Username, District) -> ok | unregistered
 rm_sub(Manager, Username, District) ->
     Manager ! {{rm_sub, self()}, {Username, District}},
+    receive {R, Manager} -> R end.
+
+% add_sick(Pid, String) -> ok | unregistered
+add_sick(Manager, Username) ->
+    Manager ! {{add_sick, self()}, {Username}},
+    receive {R, Manager} -> R end.
+
+% is_sick(Pid, String) -> Boolean
+is_sick(Manager, Username) ->
+    Manager ! {{is_sick, self()}, {Username}},
     receive {R, Manager} -> R end.
