@@ -1,0 +1,47 @@
+#
+# Registrations
+# 
+{"RequestType":"Registration", "Name": "Jorge", "Domicile": "Braga", "Password": "12345", "version":"1.0.0"}
+{"RequestType":"Registration", "Name": "Gisela", "Domicile": "Braga", "Password": "12345", "version":"1.0.0"}
+{"RequestType":"Registration", "Name": "Ana", "Domicile": "Braga", "Password": "12345", "version":"1.0.0"}
+{"RequestType":"Registration", "Name": "Suzana", "Domicile": "Braga", "Password": "12345", "version":"1.0.0"}
+{"RequestType":"Registration", "Name": "Nuno", "Domicile": "Porto", "Password": "12345", "version":"1.0.0"}
+{"RequestType":"Registration", "Name": "Justino", "Domicile": "Porto", "Password": "12345", "version":"1.0.0"}
+#
+# Move Jorge to (1,1) and then (0,0)
+# 
+{"RequestType":"Authentication", "Name": "Jorge", "Password": "12345", "version":"1.0.0"}
+{"RequestType":"NotifyLocation", "Latitude": 1, "Longitude": 1, "version":"1.0.0"}
+{"RequestType":"NotifyLocation", "Latitude": 0, "Longitude": 0, "version":"1.0.0"}
+{"RequestType":"Logout", "version":"1.0.0"}
+#
+# Move Gisela to (0,0)
+# 
+{"RequestType":"Authentication", "Name": "Gisela", "Password": "12345", "version":"1.0.0"}
+{"RequestType":"NotifyLocation", "Latitude": 0, "Longitude": 0, "version":"1.0.0"}
+{"RequestType":"Logout", "version":"1.0.0"}
+#
+# Move Ana to (0,0)
+# 
+{"RequestType":"Authentication", "Name": "Ana", "Password": "12345", "version":"1.0.0"}
+{"RequestType":"NotifyLocation", "Latitude": 0, "Longitude": 0, "version":"1.0.0"}
+{"RequestType":"Logout", "version":"1.0.0"}
+#
+# Move Suzana to (1,1)
+# 
+{"RequestType":"Authentication", "Name": "Suzana", "Password": "12345", "version":"1.0.0"}
+{"RequestType":"NotifyLocation", "Latitude": 1, "Longitude": 1, "version":"1.0.0"}
+{"RequestType":"Logout", "version":"1.0.0"}
+#
+# Move Nuno to (0,0)
+# 
+{"RequestType":"Authentication", "Name": "Nuno", "Password": "12345", "version":"1.0.0"}
+{"RequestType":"NotifyLocation", "Latitude": 0, "Longitude": 0, "version":"1.0.0"}
+{"RequestType":"Logout", "version":"1.0.0"}
+#
+# Move Justino to (0,0)
+# 
+{"RequestType":"Authentication", "Name": "Justino", "Password": "12345", "version":"1.0.0"}
+{"RequestType":"NotifyLocation", "Latitude": 0, "Longitude": 0, "version":"1.0.0"}
+{"RequestType":"NotifyInfection", "version":"1.0.0"}
+{"RequestType":"Logout", "version":"1.0.0"}
