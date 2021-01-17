@@ -1,8 +1,8 @@
 #/bin/sh
-if [[ -n "$TERM" ]]; then
-    T=$TERM
-elif [[ -n "$1" ]]; then
+if [[ -n "$1" ]]; then
     T=$1
+elif [[ -n "$TERM" ]]; then
+    T=$TERM
 else
     echo "TERM environment variable not found."
     echo "Please give your terminal emulator as parameter."
