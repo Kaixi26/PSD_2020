@@ -1,4 +1,5 @@
-#/bin/sh
+#/bin/env bash
+
 if [[ -n "$1" ]]; then
     T=$1
 elif [[ -n "$TERM" ]]; then
