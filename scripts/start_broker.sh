@@ -1,4 +1,5 @@
-#/bin/env sh
+#/bin/env bash
+
 cd public_notifications_broker
 (mvn compile &&
 mvn exec:java -q -Dexec.mainClass="Broker")
