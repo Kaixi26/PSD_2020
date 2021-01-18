@@ -95,39 +95,52 @@ serve_connection_data(State, Data) ->
 % serve_client_request_registration(State, Request) -> {updateState, State} | _
 serve_connection_request(State, Request) ->
     try
-        case maps:get("RequestType", Request#request.map, unknown) of
-            "Registration" ->
-                serve_client_request_registration(State, Request);
-            "Authentication" ->
-                serve_client_request_authentication(State, Request);
-            "NotifyInfection" ->
-                serve_client_request_notifyInfection(State, Request);
-            "NotifyLocation" ->
-                serve_client_request_notifyLocation(State, Request);
-            "ProbeLocation" ->
-                serve_client_request_probeLocation(State, Request);
-            "Logout" ->
-                if 
-                    State#state.logged /= false ->
-                        client_manager:rm_logged(State#state.cliManager, State#state.logged);
-                    true ->
-                        ok
-                end,
-                gen_tcp:send(State#state.sock, make_response("Logout", 200)),
-                {updateState, State#state{logged = false}};
-            "Subscribe" ->
-                serve_client_request_subscribe(State, Request);
-            "Unsubscribe" ->
-                serve_client_request_unsubscribe(State, Request);
-            "GetSubscriptions" ->
-                serve_client_request_getSubscriptions(State, Request);
-            "DistrictRequest" ->
-                serve_client_request_districtRequest(State, Request);
-            "AnnounceDistrictServer" ->
-                serve_server_request_announce(State, Request);
+        ReqType = maps:get("RequestType", Request#request.map, "Unknown"),
+        IsSick = case State#state.logged of
+                     false ->
+                         false;
+                     Username ->
+                         auth_manager:is_sick(State#state.authManager, Username)
+                 end,
+        io:fwrite("~w~n~n", [IsSick]),
+        case ((ReqType /= "Logout") and IsSick) of
+            true ->
+                gen_tcp:send(State#state.sock, make_response(ReqType, 403));
             _ ->
-                gen_tcp:send(State#state.sock, make_response(400)),
-                io:format("Unrecognized request.")
+                case ReqType of
+                    "Registration" ->
+                        serve_client_request_registration(State, Request);
+                    "Authentication" ->
+                        serve_client_request_authentication(State, Request);
+                    "NotifyInfection" ->
+                        serve_client_request_notifyInfection(State, Request);
+                    "NotifyLocation" ->
+                        serve_client_request_notifyLocation(State, Request);
+                    "ProbeLocation" ->
+                        serve_client_request_probeLocation(State, Request);
+                    "Logout" ->
+                        if 
+                            State#state.logged /= false ->
+                                client_manager:rm_logged(State#state.cliManager, State#state.logged);
+                            true ->
+                                ok
+                        end,
+                        gen_tcp:send(State#state.sock, make_response("Logout", 200)),
+                        {updateState, State#state{logged = false}};
+                    "Subscribe" ->
+                        serve_client_request_subscribe(State, Request);
+                    "Unsubscribe" ->
+                        serve_client_request_unsubscribe(State, Request);
+                    "GetSubscriptions" ->
+                        serve_client_request_getSubscriptions(State, Request);
+                    "DistrictRequest" ->
+                        serve_client_request_districtRequest(State, Request);
+                    "AnnounceDistrictServer" ->
+                        serve_server_request_announce(State, Request);
+                    _ ->
+                        gen_tcp:send(State#state.sock, make_response(400)),
+                        io:format("Unrecognized request.")
+                end
         end
     catch
         error:{badkey,_} ->
@@ -153,9 +166,14 @@ serve_client_request_authentication(State, Request) ->
                                   , maps:get("Name", Request#request.map)
                                   , maps:get("Password", Request#request.map)) of
         ok ->
-            gen_tcp:send(State#state.sock, make_response("Authentication", 200)),
-            client_manager:add_logged(State#state.cliManager, maps:get("Name", Request#request.map)),
-            {updateState, State#state{logged = maps:get("Name", Request#request.map)}};
+            case auth_manager:is_sick(State#state.authManager, maps:get("Name", Request#request.map)) of
+                true ->
+                    gen_tcp:send(State#state.sock, make_response("Authentication", 403));
+                false ->
+                    gen_tcp:send(State#state.sock, make_response("Authentication", 200)),
+                    client_manager:add_logged(State#state.cliManager, maps:get("Name", Request#request.map)),
+                    {updateState, State#state{logged = maps:get("Name", Request#request.map)}}
+            end;
         _ ->
             gen_tcp:send(State#state.sock, make_response("Authentication", 403))
     end.
@@ -234,6 +252,7 @@ serve_client_request_notifyInfection(State, _Request) ->
                                               client_manager:add_contact(State#state.cliManager, Name)
                                       end, Contacts)
                     end,
+                    auth_manager:add_sick(State#state.authManager, Username),
                     gen_tcp:send(State#state.sock, make_response("NotifyInfection", 201))
             end
     end.
