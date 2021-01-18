@@ -67,16 +67,14 @@ public class Controller {
                         break;
                     }
                     alive = false;
+                    System.exit(0);
                     break;
                 default:
                     view.showInvalidInput();
+                    break;
             }
         }
-
-        } catch (ConnectException e){
-            System.out.println();
-        }
-        catch (Exception ex){
+        } catch (Exception ex){
             System.out.println(ex.getStackTrace());
         }
     }
