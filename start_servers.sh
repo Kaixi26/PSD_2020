@@ -19,8 +19,9 @@ echo "Starting directory.")
 echo "Starting broker.")
 echo "Press any key after servers have been initialized:"
 read -n 1 key
-for district in Braga Porto Lisboa; do
+for district in Braga Porto Lisboa Faro; do
     (($T -e ./scripts/start_district.sh $district) &
      echo "Starting district '$district'.")
 done
+
 echo "All servers started."

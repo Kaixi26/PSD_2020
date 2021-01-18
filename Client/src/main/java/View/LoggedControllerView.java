@@ -81,7 +81,7 @@ public class LoggedControllerView {
     public void showNotificationView(String json){
         Gson g = new Gson();
         NotificationObj obj = g.fromJson(json,NotificationObj.class);
-        System.out.println("Notification arrived! --> " + obj.NotificationType + "//Its not here"); //TODO ERASE
+        //System.out.println("Notification arrived! --> " + obj.NotificationType + "//Its not here"); //TODO ERASE
         switch (obj.NotificationType) {
             case "InfectionsIncrease":
                 showInfectionsIncreaseView(obj);
@@ -138,7 +138,7 @@ public class LoggedControllerView {
         System.out.println(
                 "The position " +
                         "(" + obj.location.latitude + "," + obj.location.longitude + ")" +
-                        " in " + obj.district_name + "is empty! Stay safe.\n"
+                        " in " + obj.district_name + " is empty! Stay safe.\n"
         );
     }
 
